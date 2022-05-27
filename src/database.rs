@@ -21,3 +21,7 @@ impl DBConnPool {
         &self.db
     }
 }
+
+pub const COLL_SEQUENCES: &str = "sequences";
+pub const COLL_USERS: &str = "users";
+
