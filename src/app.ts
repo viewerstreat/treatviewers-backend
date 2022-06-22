@@ -9,21 +9,21 @@ import {FastifyPluginAsync} from 'fastify';
 
 dotenv.config();
 export type AppOptions = {
-  // Place your custom options for app below here
+  isAwesomeApp: boolean;
 } & Partial<AutoloadPluginOptions>;
 
 const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void> => {
   // register helmet
-  void fastify.register(FastifyHelmet);
+  fastify.register(FastifyHelmet);
   // register cors
-  void fastify.register(FastifyCors);
+  fastify.register(FastifyCors);
   // register mongodb plugins
-  void fastify.register(FastifyMongodb, {
+  fastify.register(FastifyMongodb, {
     forceClose: true,
     url: process.env.DB_CONN_URL,
   });
   // register static file serve
-  void fastify.register(FastifyStatic, {
+  fastify.register(FastifyStatic, {
     root: join(__dirname, '../public'),
     prefix: '/public/',
     redirect: true,
@@ -35,15 +35,15 @@ const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void>
   // });
 
   // This loads all plugins defined in plugins
-  void fastify.register(AutoLoad, {
+  fastify.register(AutoLoad, {
     dir: join(__dirname, 'plugins'),
     options: opts,
   });
 
   // This loads all plugins defined in routes
-  void fastify.register(AutoLoad, {
+  fastify.register(AutoLoad, {
     dir: join(__dirname, 'routes'),
-    options: opts,
+    options: {...opts, prefix: '/api/v1'},
   });
 };
 
