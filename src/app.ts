@@ -28,21 +28,13 @@ const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void>
   fastify.register(FastifyStatic, {
     root: join(__dirname, RELATIVE_DIST_STATIC_FOLDER),
   });
-
   // register swagger plugin
   fastify.register(FastifySwagger, SWAGGER_CONFIG_OPTS);
-
-  // fastify.setNotFoundHandler((request, reply) => {
-  //   // const p = join(__dirname, '../public/index.html');
-  //   reply.sendFile('app.js');
-  // });
-
   // This loads all plugins defined in plugins
   fastify.register(AutoLoad, {
     dir: join(__dirname, 'plugins'),
     options: opts,
   });
-
   // This loads all plugins defined in routes
   fastify.register(AutoLoad, {
     dir: join(__dirname, 'routes'),

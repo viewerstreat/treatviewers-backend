@@ -1,9 +1,10 @@
-import { FastifyPluginAsync } from "fastify"
+import {FastifyPluginAsync} from 'fastify';
 
 const example: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get('/', async function (request, reply) {
-    return 'this is an example'
-  })
-}
+    const nextId = await fastify.getSequenceNextVal('TEMP_SEQ_TEST2');
+    return `this is an example ${nextId}`;
+  });
+};
 
 export default example;

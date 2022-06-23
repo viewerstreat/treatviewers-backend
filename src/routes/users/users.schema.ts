@@ -12,6 +12,8 @@ export const UserSchema = Type.Object({
   referredBy: Type.Optional(Type.String()),
 });
 
+export type UserType = Static<typeof UserSchema>;
+
 export const GetAllUsersResponseSchema = Type.Object({
   success: Type.Boolean(),
   data: Type.Array(UserSchema),
@@ -49,4 +51,38 @@ export const FindUserOpts: RouteShorthandOptions = {
       200: FindUserResponse,
     },
   },
+};
+
+const CreateUserSchema = Type.Object({
+  id: Type.Optional(Type.Number()),
+  name: Type.String(),
+  email: Type.String({format: 'email'}),
+  phone: Type.String({maxLength: 15, minLength: 10}),
+});
+
+const CreateUserResponse = Type.Object({
+  success: Type.Boolean(),
+  data: UserSchema,
+});
+
+export const CreateUserOpts: RouteShorthandOptions = {
+  schema: {
+    body: {
+      type: 'object',
+      properties: {
+        id: {type: 'string'},
+        name: {type: 'string'},
+        email: {type: 'string'},
+        phone: {type: 'string'},
+      },
+    },
+    response: {
+      201: CreateUserResponse,
+    },
+  },
+};
+
+export type CreateUserRequest = {
+  Body: Static<typeof CreateUserSchema>;
+  Reply: Static<typeof CreateUserResponse>;
 };

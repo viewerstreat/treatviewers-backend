@@ -1,6 +1,6 @@
 import {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
-import {COLL_USERS} from '../../utils/constants';
-import {FindUserRequest} from './users.schema';
+import {COLL_USERS, USER_ID_SEQ} from '../../utils/constants';
+import {CreateUserRequest, FindUserRequest, UserType} from './users.schema';
 
 export const getAllUsersHandler = async (
   request: FastifyRequest,
@@ -27,4 +27,19 @@ export const findUserHandler = async (
     return;
   }
   return {success: true, data: result};
+};
+
+export const createUserHandler = async (
+  request: FastifyRequest<CreateUserRequest>,
+  reply: FastifyReply,
+  fastify: FastifyInstance,
+) => {
+  const id = request.body.id || (await fastify.getSequenceNextVal(USER_ID_SEQ));
+  request.log.warn('id is ' + id);
+  const doc = {...request.body, isActive: true};
+  const result = await fastify.mongo.db
+    ?.collection<UserType>(COLL_USERS)
+    .findOneAndUpdate({id}, {$set: {...doc}}, {upsert: true, returnDocument: 'after'});
+  request.log.info('result is ' + JSON.stringify(result));
+  reply.code(201).send({success: true, data: result?.value});
 };
