@@ -7,6 +7,7 @@ import FastifyCors from '@fastify/cors';
 import FastifyStatic from '@fastify/static';
 import FastifySwagger from '@fastify/swagger';
 import {FastifyPluginAsync} from 'fastify';
+import {RELATIVE_DIST_STATIC_FOLDER, SWAGGER_CONFIG_OPTS} from './utils/config';
 
 dotenv.config();
 export type AppOptions = {
@@ -25,23 +26,11 @@ const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void>
   });
   // register static file serve
   fastify.register(FastifyStatic, {
-    root: join(__dirname, '../public'),
-    prefix: '/public/',
-    redirect: true,
+    root: join(__dirname, RELATIVE_DIST_STATIC_FOLDER),
   });
 
   // register swagger plugin
-  fastify.register(FastifySwagger, {
-    routePrefix: '/docs',
-    swagger: {
-      info: {
-        title: 'Trailsbuddy API ',
-        description: 'Trailsbuddy API documentation',
-        version: '0.0.1',
-      },
-    },
-    exposeRoute: true,
-  });
+  fastify.register(FastifySwagger, SWAGGER_CONFIG_OPTS);
 
   // fastify.setNotFoundHandler((request, reply) => {
   //   // const p = join(__dirname, '../public/index.html');
