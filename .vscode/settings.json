@@ -1,5 +1,6 @@
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.fontFamily": "'Source Code Pro', Menlo, Monaco, 'Courier New', monospace"
+  "editor.fontFamily": "'Source Code Pro', Menlo, Monaco, 'Courier New', monospace",
+  "prettier.printWidth": 100
 }
