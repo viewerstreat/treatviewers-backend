@@ -5,6 +5,7 @@ import FastifyMongodb from '@fastify/mongodb';
 import FastifyHelmet from '@fastify/helmet';
 import FastifyCors from '@fastify/cors';
 import FastifyStatic from '@fastify/static';
+import FastifySwagger from '@fastify/swagger';
 import {FastifyPluginAsync} from 'fastify';
 
 dotenv.config();
@@ -27,6 +28,19 @@ const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void>
     root: join(__dirname, '../public'),
     prefix: '/public/',
     redirect: true,
+  });
+
+  // register swagger plugin
+  fastify.register(FastifySwagger, {
+    routePrefix: '/docs',
+    swagger: {
+      info: {
+        title: 'Trailsbuddy API ',
+        description: 'Trailsbuddy API documentation',
+        version: '0.0.1',
+      },
+    },
+    exposeRoute: true,
   });
 
   // fastify.setNotFoundHandler((request, reply) => {
