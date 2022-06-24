@@ -1,6 +1,6 @@
 import {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
 import {COLL_USERS, USER_ID_SEQ} from '../../utils/constants';
-import {CreateUserRequest, FindUserRequest, UserType} from './users.schema';
+import {CreateUserRequest, FindUserRequest, UserSchema} from './users.schema';
 
 export const getAllUsersHandler = async (
   request: FastifyRequest,
@@ -38,7 +38,7 @@ export const createUserHandler = async (
   request.log.warn('id is ' + id);
   const doc = {...request.body, isActive: true};
   const result = await fastify.mongo.db
-    ?.collection<UserType>(COLL_USERS)
+    ?.collection<UserSchema>(COLL_USERS)
     .findOneAndUpdate({id}, {$set: {...doc}}, {upsert: true, returnDocument: 'after'});
   request.log.info('result is ' + JSON.stringify(result));
   const token = fastify.generateToken(id);
