@@ -41,5 +41,6 @@ export const createUserHandler = async (
     ?.collection<UserType>(COLL_USERS)
     .findOneAndUpdate({id}, {$set: {...doc}}, {upsert: true, returnDocument: 'after'});
   request.log.info('result is ' + JSON.stringify(result));
-  reply.code(201).send({success: true, data: result?.value});
+  const token = fastify.generateToken(id);
+  reply.code(201).send({success: true, data: result?.value, token});
 };

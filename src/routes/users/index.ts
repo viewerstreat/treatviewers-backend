@@ -15,8 +15,10 @@ const usersRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   );
 
   // find a particular user by id
-  fastify.get<FindUserRequest>('/:id', FindUserOpts, (request, reply) =>
-    findUserHandler(request, reply, fastify),
+  fastify.get<FindUserRequest>(
+    '/:id',
+    {onRequest: [fastify.authenticate], ...FindUserOpts},
+    (request, reply) => findUserHandler(request, reply, fastify),
   );
 
   // create/update user

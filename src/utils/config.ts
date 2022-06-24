@@ -12,3 +12,6 @@ export const SWAGGER_CONFIG_OPTS: SwaggerOptions = {
     },
   },
 };
+
+// JWT token expiry time either in seconds or in string like 1d, 2h etc.
+export const JWT_EXPIRY: string | number = '1h';

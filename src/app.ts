@@ -4,6 +4,7 @@ import AutoLoad, {AutoloadPluginOptions} from '@fastify/autoload';
 import FastifyMongodb from '@fastify/mongodb';
 import FastifyHelmet from '@fastify/helmet';
 import FastifyCors from '@fastify/cors';
+import fastifyCompress from '@fastify/compress';
 import FastifyStatic from '@fastify/static';
 import FastifySwagger from '@fastify/swagger';
 import {FastifyPluginAsync} from 'fastify';
@@ -19,6 +20,8 @@ const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void>
   fastify.register(FastifyHelmet);
   // register cors
   fastify.register(FastifyCors);
+  // register compression
+  fastify.register(fastifyCompress);
   // register mongodb plugins
   fastify.register(FastifyMongodb, {
     forceClose: true,

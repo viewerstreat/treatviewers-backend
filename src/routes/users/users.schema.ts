@@ -63,6 +63,7 @@ const CreateUserSchema = Type.Object({
 const CreateUserResponse = Type.Object({
   success: Type.Boolean(),
   data: UserSchema,
+  token: Type.String(),
 });
 
 export const CreateUserOpts: RouteShorthandOptions = {
