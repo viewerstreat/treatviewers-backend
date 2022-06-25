@@ -1,5 +1,7 @@
+import {ObjectId} from '@fastify/mongodb';
+
 export interface MovieSchema {
-  _id?: string;
+  _id?: string | ObjectId;
   name?: string;
   description?: string;
   tags?: string[];

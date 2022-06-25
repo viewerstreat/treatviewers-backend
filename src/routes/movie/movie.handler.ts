@@ -1,4 +1,5 @@
 import {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
+import {Filter, Sort} from 'mongodb';
 import {MovieSchema} from '../../models/movie';
 import {COLL_MOVIES} from '../../utils/constants';
 import {CreateMovieRequest, GetMoviesRequest} from './movie.schema';
@@ -9,12 +10,26 @@ export const getAllMoviesHandler = async (
   fastify: FastifyInstance,
 ) => {
   // generate the findBy query
-  const findBy = {isActive: true, moviePromotionExpiry: {$gt: fastify.getCurrentTimestamp()}};
+  const findBy: Filter<MovieSchema> = {
+    isActive: true,
+    moviePromotionExpiry: {$gt: fastify.getCurrentTimestamp()},
+  };
+  // filter by _id if it is passed in the query parameters
+  if (request.query._id) {
+    let oid = new fastify.mongo.ObjectId(request.query._id);
+    findBy._id = oid;
+  }
+
+  const sortBy: Sort = {_id: -1};
+  const pageNo = request.query.pageNo || 0;
+  const pageSize = request.query.pageSize || fastify.getDefaultPageSize();
   const result = await fastify.mongo.db
     ?.collection<MovieSchema>(COLL_MOVIES)
     .find(findBy)
+    .skip(pageNo * pageSize)
+    .limit(pageSize)
+    .sort(sortBy)
     .toArray();
-  request.log.info(result);
   return {success: true, data: result};
 };
 

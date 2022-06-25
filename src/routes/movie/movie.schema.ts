@@ -33,6 +33,7 @@ export interface GetMoviesRequest {
     authorization: string;
   };
   Querystring: {
+    _id?: string;
     pageSize?: number;
     pageNo?: number;
   };
@@ -49,6 +50,7 @@ export const GetMoviesRequestOpts: RouteShorthandOptions = {
     querystring: {
       type: 'object',
       properties: {
+        _id: {type: 'string'},
         pageSize: {type: 'number'},
         pageNo: {type: 'number'},
       },

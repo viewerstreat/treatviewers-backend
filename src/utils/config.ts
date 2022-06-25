@@ -18,3 +18,6 @@ export const JWT_EXPIRY: string | number = '1h';
 
 // Default Movie promotion expiry in days
 export const MOVIE_EXPIRY_DAYS = 10;
+
+// default page size when fetching a list
+export const DEFAULT_PAGE_SIZE = 10;
