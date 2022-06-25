@@ -1,15 +1,27 @@
 import fp from 'fastify-plugin';
-import fastifyJwt from '@fastify/jwt';
+import fastifyJWT from '@fastify/jwt';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {JWT_EXPIRY} from '../utils/config';
+
+interface JWTPayload {
+  id: number;
+  name?: string;
+}
+
+declare module '@fastify/jwt' {
+  interface FastifyJWT {
+    payload: JWTPayload;
+    user: JWTPayload;
+  }
+}
 
 export default fp(async (fastify, opts) => {
   const secret = process.env.JWT_SECRET_KEY;
   if (!secret) {
     throw new Error('JWT_SECRET_KEY not found.');
   }
-  fastify.register(fastifyJwt, {secret});
 
+  fastify.register(fastifyJWT, {secret});
   fastify.decorate(
     'authenticate',
     async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
@@ -21,9 +33,8 @@ export default fp(async (fastify, opts) => {
     },
   );
 
-  fastify.decorate('generateToken', (id: number): string => {
-    const payload = {id};
-    const token = fastify.jwt.sign(payload, {expiresIn: JWT_EXPIRY});
+  fastify.decorate('generateToken', (id: number, name?: string): string => {
+    const token = fastify.jwt.sign({id, name}, {expiresIn: JWT_EXPIRY});
     return token;
   });
 });
@@ -32,6 +43,6 @@ export default fp(async (fastify, opts) => {
 declare module 'fastify' {
   export interface FastifyInstance {
     authenticate(request: FastifyRequest, reply: FastifyReply): Promise<void>;
-    generateToken(id: number): string;
+    generateToken(id: number, name?: string): string;
   }
 }

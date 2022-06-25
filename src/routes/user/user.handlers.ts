@@ -1,6 +1,7 @@
 import {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
+import {UserSchema} from '../../models/user';
 import {COLL_USERS, USER_ID_SEQ} from '../../utils/constants';
-import {CreateUserRequest, FindUserRequest, UserSchema} from './users.schema';
+import {CreateUserRequest, FindUserRequest} from './user.schema';
 
 export const getAllUsersHandler = async (
   request: FastifyRequest,
@@ -16,6 +17,7 @@ export const findUserHandler = async (
   reply: FastifyReply,
   fastify: FastifyInstance,
 ) => {
+  request.log.info(request.user);
   const id = Number(request.params.id);
   if (!id || Number.isNaN(id)) {
     reply.badRequest(`invalid value provided for id: ${request.params.id}`);

@@ -1,14 +1,14 @@
 import {FastifyPluginAsync} from 'fastify';
-import {createUserHandler, findUserHandler, getAllUsersHandler} from './users.handlers';
+import {createUserHandler, findUserHandler, getAllUsersHandler} from './user.handlers';
 import {
   CreateUserOpts,
   CreateUserRequest,
   FindUserOpts,
   FindUserRequest,
   GetAllUsersOpts,
-} from './users.schema';
+} from './user.schema';
 
-const usersRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
+const userRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   // get all users list
   fastify.get('/', GetAllUsersOpts, (request, reply) =>
     getAllUsersHandler(request, reply, fastify),
@@ -27,4 +27,4 @@ const usersRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   });
 };
 
-export default usersRoute;
+export default userRoute;

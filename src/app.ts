@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 import {join} from 'path';
+import {FastifyPluginAsync} from 'fastify';
 import AutoLoad, {AutoloadPluginOptions} from '@fastify/autoload';
 import FastifyMongodb from '@fastify/mongodb';
 import FastifyHelmet from '@fastify/helmet';
@@ -7,7 +8,6 @@ import FastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
 import FastifyStatic from '@fastify/static';
 import FastifySwagger from '@fastify/swagger';
-import {FastifyPluginAsync} from 'fastify';
 import {RELATIVE_DIST_STATIC_FOLDER, SWAGGER_CONFIG_OPTS} from './utils/config';
 
 dotenv.config();
