@@ -2,7 +2,6 @@ import * as dotenv from 'dotenv';
 import {join} from 'path';
 import {FastifyPluginAsync} from 'fastify';
 import AutoLoad, {AutoloadPluginOptions} from '@fastify/autoload';
-import FastifyMongodb from '@fastify/mongodb';
 import FastifyHelmet from '@fastify/helmet';
 import FastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
@@ -22,11 +21,6 @@ const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void>
   fastify.register(FastifyCors);
   // register compression
   fastify.register(fastifyCompress);
-  // register mongodb plugins
-  fastify.register(FastifyMongodb, {
-    forceClose: true,
-    url: process.env.DB_CONN_URL,
-  });
   // register static file serve
   fastify.register(FastifyStatic, {
     root: join(__dirname, RELATIVE_DIST_STATIC_FOLDER),

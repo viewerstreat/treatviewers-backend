@@ -1,9 +1,12 @@
+import * as dotenv from 'dotenv';
 import fp from 'fastify-plugin';
 import fastifyJWT from '@fastify/jwt';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {JWT_EXPIRY} from '../utils/config';
 
-interface JWTPayload {
+dotenv.config();
+
+export interface JWTPayload {
   id: number;
   name?: string;
 }
@@ -26,8 +29,10 @@ export default fp(async (fastify, opts) => {
     'authenticate',
     async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       try {
+        console.log('authenticate called');
         await request.jwtVerify();
       } catch (err) {
+        console.log(err);
         reply.send(err);
       }
     },
