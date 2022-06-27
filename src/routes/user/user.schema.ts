@@ -70,6 +70,7 @@ export const CreateUserOpts: RouteShorthandOptions = {
   schema: {
     body: {
       type: 'object',
+      required: ['name', 'email', 'phone'],
       properties: {
         id: {type: 'number'},
         name: {type: 'string'},
@@ -81,7 +82,7 @@ export const CreateUserOpts: RouteShorthandOptions = {
       201: {
         type: 'object',
         properties: {
-          success: {type: 'string'},
+          success: {type: 'boolean'},
           data: userTypeObject,
           token: {type: 'string'},
         },

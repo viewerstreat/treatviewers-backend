@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run build:ts && tsc -p test/tsconfig.json && tap --ts test/**/user.test.ts",
+    "test": "npm run build:ts && tsc -p test/tsconfig.json && tap --ts --no-timeout test/**/*.test.ts",
     "start": "npm run build:ts && fastify start dist/app.js",
     "build:ts": "tsc",
     "watch:ts": "tsc -w",

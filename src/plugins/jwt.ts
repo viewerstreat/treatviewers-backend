@@ -29,10 +29,8 @@ export default fp(async (fastify, opts) => {
     'authenticate',
     async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
       try {
-        console.log('authenticate called');
         await request.jwtVerify();
       } catch (err) {
-        console.log(err);
         reply.send(err);
       }
     },
