@@ -4,6 +4,7 @@ export const RELATIVE_DIST_STATIC_FOLDER = '../public';
 export const SWAGGER_CONFIG_OPTS: SwaggerOptions = {
   routePrefix: '/docs',
   exposeRoute: true,
+  staticCSP: true,
   swagger: {
     info: {
       title: 'Trailsbuddy API',
