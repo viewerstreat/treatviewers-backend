@@ -10,6 +10,7 @@ export const SWAGGER_CONFIG_OPTS: SwaggerOptions = {
       description: 'Trailsbuddy API documentation',
       version: '0.0.1',
     },
+    schemes: ['http', 'https'],
   },
 };
 
