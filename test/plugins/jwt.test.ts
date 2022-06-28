@@ -1,8 +1,10 @@
 import {test} from 'tap';
 import Fastify from 'fastify';
 import Jwt, {JWTPayload} from '../../src/plugins/jwt';
+import {setupEnv} from '../helper';
 
 test('support decorator function', async (t) => {
+  setupEnv();
   const fastify = Fastify();
   fastify.register(Jwt);
   fastify.get('/verify', async function (request, reply) {

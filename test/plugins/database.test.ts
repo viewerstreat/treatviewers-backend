@@ -1,8 +1,10 @@
 import {test} from 'tap';
 import Fastify from 'fastify';
 import Database from '../../src/plugins/database';
+import {setupEnv} from '../helper';
 
 test('support decorator function', async (t) => {
+  setupEnv();
   const fastify = Fastify();
   fastify.register(Database);
   await fastify.ready();

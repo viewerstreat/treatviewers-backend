@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import fp from 'fastify-plugin';
 import App from '../src/app';
 import * as tap from 'tap';
+import {loadEnv} from '../src/utils/loadEnv';
 export type Test = typeof tap['Test']['prototype'];
 
 // Fill in this config with all the configurations
@@ -11,8 +12,14 @@ export type Test = typeof tap['Test']['prototype'];
 //   return {}
 // }
 
+function setupEnv() {
+  process.env.NODE_ENV = 'test';
+  loadEnv();
+}
+
 // Automatically build and tear down our instance
 async function build(t: Test) {
+  setupEnv();
   const app = Fastify();
 
   // fastify-plugin ensures that all decorators
@@ -28,4 +35,4 @@ async function build(t: Test) {
   return app;
 }
 
-export {build};
+export {build, setupEnv};

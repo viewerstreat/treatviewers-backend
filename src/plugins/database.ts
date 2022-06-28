@@ -1,10 +1,7 @@
-import * as dotenv from 'dotenv';
 import fp from 'fastify-plugin';
 import FastifyMongodb from '@fastify/mongodb';
 import {COLL_SEQUENCES} from '../utils/constants';
 import {SequenceSchema} from '../models/sequence';
-
-dotenv.config();
 
 export default fp(async (fastify, opts) => {
   const dbConnUrl = process.env.DB_CONN_URL;

@@ -1,10 +1,7 @@
-import * as dotenv from 'dotenv';
 import fp from 'fastify-plugin';
 import fastifyJWT from '@fastify/jwt';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {JWT_EXPIRY} from '../utils/config';
-
-dotenv.config();
 
 export interface JWTPayload {
   id: number;

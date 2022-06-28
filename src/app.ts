@@ -1,6 +1,5 @@
-import * as dotenv from 'dotenv';
 import {join} from 'path';
-import fastify, {FastifyPluginAsync} from 'fastify';
+import {FastifyPluginAsync} from 'fastify';
 import AutoLoad, {AutoloadPluginOptions} from '@fastify/autoload';
 import FastifyHelmet from '@fastify/helmet';
 import FastifyCors from '@fastify/cors';
@@ -9,7 +8,6 @@ import FastifyStatic from '@fastify/static';
 import FastifySwagger from '@fastify/swagger';
 import {RELATIVE_DIST_STATIC_FOLDER, SWAGGER_CONFIG_OPTS} from './utils/config';
 
-dotenv.config();
 export type AppOptions = {
   isAwesomeApp: boolean;
 } & Partial<AutoloadPluginOptions>;
@@ -38,12 +36,6 @@ const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void>
     options: {...opts, prefix: '/api/v1'},
   });
 };
-
-const server = fastify();
-server.register(app);
-server.listen({port: Number(process.env.PORT) || 5000, host: '0.0.0.0'}).then(() => {
-  console.log('server started...');
-});
 
 export default app;
 export {app};
