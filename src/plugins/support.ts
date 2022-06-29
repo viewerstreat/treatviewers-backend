@@ -21,7 +21,7 @@ export default fp<SupportPluginOptions>(async (fastify, opts) => {
   });
 
   // decorator function to get default movie promotion expiry timestmp
-  fastify.decorate('getDefaultMoviePromoExpiry', (): number => {
+  fastify.decorate('getDefaultPromoExpiry', (): number => {
     return new Date().getTime() + MOVIE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
   });
 });
@@ -31,6 +31,6 @@ declare module 'fastify' {
   export interface FastifyInstance {
     getCurrentTimestamp(): number;
     getDefaultPageSize(): number;
-    getDefaultMoviePromoExpiry(): number;
+    getDefaultPromoExpiry(): number;
   }
 }

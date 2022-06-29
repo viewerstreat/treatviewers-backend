@@ -49,7 +49,7 @@ export const createMovieHandler = async (
     sponsoredByLogo: request.body.sponsoredByLogo,
     releaseDate: request.body.releaseDate,
     releaseOutlets: request.body.releaseOutlets,
-    moviePromotionExpiry: request.body.moviePromotionExpiry || fastify.getDefaultMoviePromoExpiry(),
+    moviePromotionExpiry: request.body.moviePromotionExpiry || fastify.getDefaultPromoExpiry(),
     viewCount: 0,
     likeCount: 0,
     isActive: true,

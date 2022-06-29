@@ -11,7 +11,7 @@ test('support decorator function', async (t) => {
 
   t.equal(fastify.getDefaultPageSize(), DEFAULT_PAGE_SIZE);
   const currTs = fastify.getCurrentTimestamp();
-  const defaultMoviePromoExpiry = fastify.getDefaultMoviePromoExpiry();
+  const defaultMoviePromoExpiry = fastify.getDefaultPromoExpiry();
   t.ok(currTs > 0);
   t.ok(defaultMoviePromoExpiry > 0);
   t.ok(defaultMoviePromoExpiry > currTs);
