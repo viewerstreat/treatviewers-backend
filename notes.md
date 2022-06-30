@@ -1,3 +1,4 @@
 - Create index on `users` collection on `id` field `unique`.
 - Create index on `movies` collection on `name` field `unique`.
 - Create index on `contests` collection on `title` field `unique`.
+- Create index on `clips` collection on `name` field `unique`.
