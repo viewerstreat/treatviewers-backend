@@ -1,6 +1,11 @@
 import {FastifyPluginAsync} from 'fastify';
-import {createContestHandler} from './contest.handler';
-import {CreateContestRequest, CreateContestRequestOpts} from './contest.schema';
+import {createContestHandler, getContestHandler} from './contest.handler';
+import {
+  CreateContestRequest,
+  CreateContestRequestOpts,
+  GetContestRequest,
+  GetContestRequestOpts,
+} from './contest.schema';
 
 const contestRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   // create contest
@@ -8,6 +13,13 @@ const contestRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> =>
     '/',
     {onRequest: [fastify.authenticate], ...CreateContestRequestOpts},
     (request, reply) => createContestHandler(request, reply, fastify),
+  );
+
+  // get contest
+  fastify.get<GetContestRequest>(
+    '/',
+    {onRequest: [fastify.authenticate], ...GetContestRequestOpts},
+    (request, reply) => getContestHandler(request, reply, fastify),
   );
 };
 

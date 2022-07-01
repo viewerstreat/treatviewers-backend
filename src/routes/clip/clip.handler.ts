@@ -1,7 +1,8 @@
 import {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
+import {Filter, Sort} from 'mongodb';
 import {ClipSchema} from '../../models/clip';
 import {COLL_CLIPS} from '../../utils/constants';
-import {CreateClipRequest} from './clip.schema';
+import {CreateClipRequest, GetClipRequest} from './clip.schema';
 
 export const createClipHandler = async (
   request: FastifyRequest<CreateClipRequest>,
@@ -26,4 +27,29 @@ export const createClipHandler = async (
     ...doc,
   };
   return {success: true, data};
+};
+
+export const getClipHandler = async (
+  request: FastifyRequest<GetClipRequest>,
+  reply: FastifyReply,
+  fastify: FastifyInstance,
+) => {
+  // generate the findBy query
+  const findBy: Filter<ClipSchema> = {isActive: true};
+  // filter by _id if it is passed in the query parameters
+  if (request.query._id) {
+    let oid = new fastify.mongo.ObjectId(request.query._id);
+    findBy._id = oid;
+  }
+  const sortBy: Sort = {_id: -1};
+  const pageNo = request.query.pageNo || 0;
+  const pageSize = request.query.pageSize || fastify.getDefaultPageSize();
+  const result = await fastify.mongo.db
+    ?.collection<ClipSchema>(COLL_CLIPS)
+    .find(findBy)
+    .skip(pageNo * pageSize)
+    .limit(pageSize)
+    .sort(sortBy)
+    .toArray();
+  return {success: true, data: result};
 };

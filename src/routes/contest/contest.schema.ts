@@ -24,6 +24,48 @@ const contestTypeObject = {
   },
 };
 
+export interface GetContestRequest {
+  Headers: {
+    authorization: string;
+  };
+  Querystring: {
+    _id?: string;
+    pageSize?: number;
+    pageNo?: number;
+  };
+}
+
+export const GetContestRequestOpts: RouteShorthandOptions = {
+  schema: {
+    headers: {
+      type: 'object',
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
+    querystring: {
+      type: 'object',
+      properties: {
+        _id: {type: 'string'},
+        pageSize: {type: 'number'},
+        pageNo: {type: 'number'},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          data: {
+            type: 'array',
+            items: contestTypeObject,
+          },
+        },
+      },
+    },
+  },
+};
+
 export interface CreateContestRequest {
   Headers: {
     authorization: string;
@@ -60,10 +102,10 @@ export const CreateContestRequestOpts: RouteShorthandOptions = {
         title: {type: 'string', minLength: 1, maxLength: 100},
         category: {type: 'string', minLength: 1},
         movieId: {type: 'string', nullable: true},
-        sponsoredBy: {type: 'string'},
+        sponsoredBy: {type: 'string', minLength: 1},
         sponsoredByLogo: {type: 'string'},
-        bannerImageUrl: {type: 'string'},
-        videoUrl: {type: 'string'},
+        bannerImageUrl: {type: 'string', format: 'uri'},
+        videoUrl: {type: 'string', format: 'uri'},
         entryFee: {type: 'number', minimum: 1},
         topPrize: {type: 'string'},
         prizeRatio: {type: 'string'},

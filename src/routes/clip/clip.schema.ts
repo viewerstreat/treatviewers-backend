@@ -14,6 +14,48 @@ const clipTypeObject = {
   },
 };
 
+export interface GetClipRequest {
+  Headers: {
+    authorization: string;
+  };
+  Querystring: {
+    _id?: string;
+    pageSize?: number;
+    pageNo?: number;
+  };
+}
+
+export const GetClipRequestOpts: RouteShorthandOptions = {
+  schema: {
+    headers: {
+      type: 'object',
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
+    querystring: {
+      type: 'object',
+      properties: {
+        _id: {type: 'string'},
+        pageSize: {type: 'number'},
+        pageNo: {type: 'number'},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          data: {
+            type: 'array',
+            items: clipTypeObject,
+          },
+        },
+      },
+    },
+  },
+};
+
 export interface CreateClipRequest {
   Headers: {
     authorization: string;
