@@ -7,6 +7,7 @@ const userTypeObject = {
     name: {type: 'string'},
     email: {type: 'string'},
     phone: {type: 'string'},
+    profilePic: {type: 'string'},
     isActive: {type: 'boolean'},
     hasUsedReferralCode: {type: 'boolean'},
     referralCode: {type: 'string'},
@@ -63,6 +64,7 @@ interface CreateUserSchema {
   name: string;
   phone: string;
   email?: string;
+  profilePic?: string;
 }
 
 export const CreateUserOpts: RouteShorthandOptions = {
@@ -76,6 +78,7 @@ export const CreateUserOpts: RouteShorthandOptions = {
         name: {type: 'string', minLength: 1, maxLength: 50},
         email: {type: 'string', format: 'email', maxLength: 100},
         phone: {type: 'string', minLength: 10, maxLength: 10, pattern: '^[0-9]{10}$'},
+        profilePic: {type: 'string', format: 'uri'},
       },
     },
     response: {
@@ -99,6 +102,48 @@ export const CreateUserOpts: RouteShorthandOptions = {
 
 export type CreateUserRequest = {
   Body: CreateUserSchema;
+};
+
+export interface UpdateUserRequest {
+  Body: {
+    name?: string;
+    profilePic?: string;
+  };
+}
+
+export const UpdateUserOpts: RouteShorthandOptions = {
+  schema: {
+    body: {
+      type: 'object',
+      properties: {
+        name: {type: 'string', minLength: 1, maxLength: 50},
+        profilePic: {type: 'string', format: 'uri'},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          data: userTypeObject,
+        },
+      },
+      400: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
+      404: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
+    },
+  },
 };
 
 export interface VerifyUserRequest {

@@ -6,6 +6,7 @@ import {
   CheckOtpRequest,
   CreateUserRequest,
   FindUserRequest,
+  UpdateUserRequest,
   VerifyUserRequest,
 } from './user.schema';
 
@@ -66,6 +67,7 @@ export const createUserHandler = async (
     name: request.body.name,
     phone: request.body.phone,
     email,
+    profilePic: request.body.profilePic || '',
     isActive: true,
     createdTs: fastify.getCurrentTimestamp(),
   };
@@ -76,6 +78,39 @@ export const createUserHandler = async (
     await saveOtp(doc.id, fastify);
   }
   return {success: true, message: 'User created'};
+};
+
+export const updateUserHandler = async (
+  request: FastifyRequest<UpdateUserRequest>,
+  reply: FastifyReply,
+  fastify: FastifyInstance,
+) => {
+  const setObj: UserSchema = {};
+  if (request.body.name) {
+    setObj.name = request.body.name;
+  }
+  if (request.body.profilePic) {
+    setObj.profilePic = request.body.profilePic;
+  }
+
+  if (Object.keys(setObj).length === 0) {
+    reply.status(400).send({success: false, message: 'name or profilePic is required'});
+    return;
+  }
+  setObj.updatedTs = fastify.getCurrentTimestamp();
+  const collUser = fastify.mongo.db?.collection<UserSchema>(COLL_USERS);
+  const result = await collUser?.findOneAndUpdate(
+    {id: request.user.id},
+    {$set: setObj},
+    {upsert: false, returnDocument: 'after'},
+  );
+
+  if (request.user.id !== result?.value?.id) {
+    reply.status(404).send({success: false, message: 'User not found'});
+    return;
+  }
+
+  return {success: true, data: result.value};
 };
 
 export const verifyUserHandler = async (

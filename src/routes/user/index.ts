@@ -2,6 +2,7 @@ import {FastifyPluginAsync} from 'fastify';
 import {
   checkOtpHandler,
   createUserHandler,
+  updateUserHandler,
   // findUserHandler,
   // getAllUsersHandler,
   verifyUserHandler,
@@ -11,6 +12,8 @@ import {
   CheckOtpRequest,
   CreateUserOpts,
   CreateUserRequest,
+  UpdateUserOpts,
+  UpdateUserRequest,
   // FindUserOpts,
   // FindUserRequest,
   // GetAllUsersOpts,
@@ -41,9 +44,16 @@ const userRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     checkOtpHandler(request, reply, fastify),
   );
 
-  // create/update user
+  // create user
   fastify.post<CreateUserRequest>('/create', CreateUserOpts, (request, reply) =>
     createUserHandler(request, reply, fastify),
+  );
+
+  // create user
+  fastify.post<UpdateUserRequest>(
+    '/update',
+    {onRequest: [fastify.authenticate], ...UpdateUserOpts},
+    (request, reply) => updateUserHandler(request, reply, fastify),
   );
 };
 
