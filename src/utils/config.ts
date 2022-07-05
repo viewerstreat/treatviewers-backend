@@ -11,7 +11,7 @@ export const SWAGGER_CONFIG_OPTS: SwaggerOptions = {
       description: 'Trailsbuddy API documentation',
       version: '0.0.1',
     },
-    schemes: ['https'],
+    schemes: ['https', 'http'],
   },
 };
 
@@ -23,3 +23,6 @@ export const MOVIE_EXPIRY_DAYS = 10;
 
 // default page size when fetching a list
 export const DEFAULT_PAGE_SIZE = 10;
+
+// otp length
+export const OTP_LENGTH = 6;

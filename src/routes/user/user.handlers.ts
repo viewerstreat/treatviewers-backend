@@ -1,7 +1,13 @@
 import {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
-import {UserSchema} from '../../models/user';
-import {COLL_USERS, USER_ID_SEQ} from '../../utils/constants';
-import {CreateUserRequest, FindUserRequest} from './user.schema';
+import {OtpSchema, UserSchema} from '../../models/user';
+import {COLL_OTPS, COLL_USERS, USER_ID_SEQ} from '../../utils/constants';
+import {saveOtp} from './otp';
+import {
+  CheckOtpRequest,
+  CreateUserRequest,
+  FindUserRequest,
+  VerifyUserRequest,
+} from './user.schema';
 
 export const getAllUsersHandler = async (
   request: FastifyRequest,
@@ -36,13 +42,79 @@ export const createUserHandler = async (
   reply: FastifyReply,
   fastify: FastifyInstance,
 ) => {
-  const id = request.body.id || (await fastify.getSequenceNextVal(USER_ID_SEQ));
-  request.log.warn('id is ' + id);
-  const doc = {...request.body, isActive: true};
-  const result = await fastify.mongo.db
-    ?.collection<UserSchema>(COLL_USERS)
-    .findOneAndUpdate({id}, {$set: {...doc}}, {upsert: true, returnDocument: 'after'});
-  request.log.info('result is ' + JSON.stringify(result));
-  const token = fastify.generateToken(id);
-  reply.code(201).send({success: true, data: result?.value, token});
+  const collUser = fastify.mongo.db?.collection<UserSchema>(COLL_USERS);
+  // check if the phone no exists already in the database
+  const checkPhResult = await collUser?.findOne({phone: request.body.phone});
+  if (checkPhResult) {
+    reply.status(400).send({success: false, message: 'User already exists with same phone'});
+    return;
+  }
+
+  // check if the email already exists in the database
+  const email = request.body.email || '';
+  if (email) {
+    const checkEmailResult = await collUser?.findOne({email});
+    if (!checkEmailResult) {
+      reply.status(400).send({success: false, message: 'User already exists with same email'});
+      return;
+    }
+  }
+
+  // user document
+  const doc: UserSchema = {
+    id: await fastify.getSequenceNextVal(USER_ID_SEQ),
+    name: request.body.name,
+    phone: request.body.phone,
+    email,
+    isActive: true,
+    createdTs: fastify.getCurrentTimestamp(),
+  };
+  // insert into the databse
+  await collUser?.insertOne(doc);
+  // save otp
+  if (doc.id) {
+    await saveOtp(doc.id, fastify);
+  }
+  return {success: true, message: 'User created'};
+};
+
+export const verifyUserHandler = async (
+  request: FastifyRequest<VerifyUserRequest>,
+  reply: FastifyReply,
+  fastify: FastifyInstance,
+) => {
+  const collUser = fastify.mongo.db?.collection<UserSchema>(COLL_USERS);
+  const result = await collUser?.findOne({phone: request.query.phone});
+  if (!result || !result.id) {
+    reply.status(404).send({success: false, message: 'User not found'});
+    return;
+  }
+  await saveOtp(result.id, fastify);
+  return {success: true, message: 'Otp generated'};
+};
+
+export const checkOtpHandler = async (
+  request: FastifyRequest<CheckOtpRequest>,
+  reply: FastifyReply,
+  fastify: FastifyInstance,
+) => {
+  const collUser = fastify.mongo.db?.collection<UserSchema>(COLL_USERS);
+  const userData = await collUser?.findOne({phone: request.query.phone});
+  if (!userData || !userData.id) {
+    reply.status(404).send({success: false, message: 'User not found'});
+    return;
+  }
+  const collOtp = fastify.mongo.db?.collection<OtpSchema>(COLL_OTPS);
+  const currTs = fastify.getCurrentTimestamp();
+  const result = await collOtp?.findOne({
+    userId: userData.id,
+    otp: request.query.otp,
+    validTill: {$gte: currTs},
+  });
+  if (!result) {
+    reply.status(404).send({success: false, message: 'OTP does not match'});
+    return;
+  }
+  const token = fastify.generateToken(userData.id);
+  return {success: true, data: userData, token};
 };

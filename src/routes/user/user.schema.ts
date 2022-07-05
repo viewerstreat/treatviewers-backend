@@ -60,31 +60,37 @@ export const FindUserOpts: RouteShorthandOptions = {
 };
 
 interface CreateUserSchema {
-  id?: number;
   name: string;
-  email: string;
   phone: string;
+  email?: string;
 }
 
 export const CreateUserOpts: RouteShorthandOptions = {
   schema: {
     body: {
+      title: 'Create User',
+      description: 'Create User POST request API endpoint',
       type: 'object',
-      required: ['name', 'email', 'phone'],
+      required: ['name', 'phone'],
       properties: {
-        id: {type: 'number'},
-        name: {type: 'string'},
-        email: {type: 'string'},
-        phone: {type: 'string'},
+        name: {type: 'string', minLength: 1, maxLength: 50},
+        email: {type: 'string', format: 'email', maxLength: 100},
+        phone: {type: 'string', minLength: 10, maxLength: 10, pattern: '^[0-9]{10}$'},
       },
     },
     response: {
-      201: {
+      200: {
         type: 'object',
         properties: {
           success: {type: 'boolean'},
-          data: userTypeObject,
-          token: {type: 'string'},
+          message: {type: 'string'},
+        },
+      },
+      400: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
         },
       },
     },
@@ -93,4 +99,75 @@ export const CreateUserOpts: RouteShorthandOptions = {
 
 export type CreateUserRequest = {
   Body: CreateUserSchema;
+};
+
+export interface VerifyUserRequest {
+  Querystring: {
+    phone: string;
+  };
+}
+
+export const VerifyUserRequestOpts: RouteShorthandOptions = {
+  schema: {
+    querystring: {
+      type: 'object',
+      required: ['phone'],
+      properties: {
+        phone: {type: 'string', minLength: 10, maxLength: 10, pattern: '^[0-9]{10}$'},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
+      404: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
+    },
+  },
+};
+
+export interface CheckOtpRequest {
+  Querystring: {
+    phone: string;
+    otp: string;
+  };
+}
+
+export const CheckOtpReqOpts: RouteShorthandOptions = {
+  schema: {
+    querystring: {
+      type: 'object',
+      required: ['phone', 'otp'],
+      properties: {
+        phone: {type: 'string', minLength: 10, maxLength: 10, pattern: '^[0-9]{10}$'},
+        otp: {type: 'string', minLength: 6, maxLength: 6, pattern: '^[0-9]{6}$'},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          data: userTypeObject,
+          token: {type: 'string'},
+        },
+      },
+      404: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
+    },
+  },
 };
