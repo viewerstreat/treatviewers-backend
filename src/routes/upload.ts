@@ -18,26 +18,3 @@ const uploadRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => 
 };
 
 export default uploadRoute;
-
-// {
-//     schema: {
-//       consumes: ['multipart/form-data'],
-//       body: {
-//         type: 'object',
-//         properties: {
-//           file: {
-//             type: 'array',
-//           },
-//         },
-//       },
-//       response: {
-//         200: {
-//           type: 'object',
-//           properties: {
-//             ETag: {type: 'string'},
-//             url: {type: 'string'},
-//           },
-//         },
-//       },
-//     },
-//   },
