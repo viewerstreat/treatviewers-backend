@@ -7,10 +7,22 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     return {success: true, message: 'Server running successfully!'};
   });
 
-  fastify.get('/getToken', async (request, reply) => {
-    const token = fastify.generateToken(1);
-    return {success: true, token};
-  });
+  fastify.get<{Querystring: {userId: number; name: string}}>(
+    '/tempApiGetToken',
+    {
+      schema: {
+        querystring: {
+          type: 'object',
+          required: ['userId'],
+          properties: {userId: {type: 'number'}, name: {type: 'string'}},
+        },
+      },
+    },
+    async (request, reply) => {
+      const token = fastify.generateToken(request.query.userId, request.query.name);
+      return {success: true, token};
+    },
+  );
 
   fastify.get<{Querystring: {phone: string}}>(
     '/tempApiGetOtp',

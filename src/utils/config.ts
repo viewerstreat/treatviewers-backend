@@ -26,3 +26,9 @@ export const DEFAULT_PAGE_SIZE = 10;
 
 // otp length
 export const OTP_LENGTH = 6;
+
+// AWS S3 Region
+export const AWS_REGION = 'ap-south-1';
+
+// AWS S3 bucket name
+export const AWS_BUCKET = 'trailsbuddy-1';

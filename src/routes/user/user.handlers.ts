@@ -150,6 +150,6 @@ export const checkOtpHandler = async (
     reply.status(404).send({success: false, message: 'OTP does not match'});
     return;
   }
-  const token = fastify.generateToken(userData.id);
+  const token = fastify.generateToken(userData.id, userData.name);
   return {success: true, data: userData, token};
 };

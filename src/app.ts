@@ -1,6 +1,7 @@
 import {join} from 'path';
 import {FastifyPluginAsync} from 'fastify';
 import AutoLoad, {AutoloadPluginOptions} from '@fastify/autoload';
+import FastifyMultipart from '@fastify/multipart';
 import FastifyHelmet from '@fastify/helmet';
 import FastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
@@ -13,6 +14,8 @@ export type AppOptions = {
 } & Partial<AutoloadPluginOptions>;
 
 const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void> => {
+  // register multipart
+  fastify.register(FastifyMultipart);
   // register helmet
   fastify.register(FastifyHelmet);
   // register cors
