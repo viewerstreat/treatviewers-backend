@@ -3,3 +3,4 @@
 - Create index on `contests` collection on `title` field `unique`.
 - Create index on `clips` collection on `name` field `unique`.
 - Create index on `questions` collection on `contestId` and `questionNo` (composite key).
+- Create index on `favourites` collection on `userId` and `mediaId` (composite key).

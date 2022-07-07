@@ -20,3 +20,19 @@ export interface MovieSchema {
   createdTs?: number;
   updatedTs?: number;
 }
+
+export enum MEDIA_TYPE {
+  MOVIE = 'movie',
+  CLIP = 'clip',
+}
+
+export interface FavouriteSchema {
+  mediaType: MEDIA_TYPE;
+  userId: number;
+  mediaId: string;
+  mediaName: string;
+  bannerImageUrl: string;
+  isRemoved: boolean;
+  createdTs?: number;
+  updatedTs?: number;
+}
