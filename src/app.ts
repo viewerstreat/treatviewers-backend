@@ -15,7 +15,11 @@ export type AppOptions = {
 
 const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void> => {
   // register multipart
-  fastify.register(FastifyMultipart);
+  fastify.register(FastifyMultipart, {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // For multipart forms, the max file size in bytes
+    },
+  });
   // register helmet
   fastify.register(FastifyHelmet);
   // register cors

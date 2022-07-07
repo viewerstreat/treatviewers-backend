@@ -7,7 +7,7 @@ const generateUniqFilename = (filename: string): string => {
 };
 
 const uploadRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  fastify.post('/upload/single', async (request, reply) => {
+  fastify.post('/upload/single', {onRequest: [fastify.authenticate]}, async (request, reply) => {
     const file = await request.file();
     const buffer = await file.toBuffer();
     const key = generateUniqFilename(file.filename);

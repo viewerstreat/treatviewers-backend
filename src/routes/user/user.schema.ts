@@ -216,3 +216,38 @@ export const CheckOtpReqOpts: RouteShorthandOptions = {
     },
   },
 };
+
+export interface RenewTokenRequest {
+  Headers: {
+    authorization: string;
+  };
+}
+
+export const RenewTokenReqOpts: RouteShorthandOptions = {
+  schema: {
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string', minLength: 1},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          data: userTypeObject,
+          token: {type: 'string'},
+        },
+      },
+      404: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
+    },
+  },
+};

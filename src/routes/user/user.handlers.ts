@@ -6,6 +6,7 @@ import {
   CheckOtpRequest,
   CreateUserRequest,
   FindUserRequest,
+  RenewTokenRequest,
   UpdateUserRequest,
   VerifyUserRequest,
 } from './user.schema';
@@ -152,4 +153,19 @@ export const checkOtpHandler = async (
   }
   const token = fastify.generateToken(userData.id, userData.name);
   return {success: true, data: userData, token};
+};
+
+export const renewTokenHandler = async (
+  request: FastifyRequest<RenewTokenRequest>,
+  reply: FastifyReply,
+  fastify: FastifyInstance,
+) => {
+  const collUser = fastify.mongo.db?.collection<UserSchema>(COLL_USERS);
+  const data = await collUser?.findOne({id: request.user.id, isActive: true});
+  if (!data || !data.id) {
+    reply.status(404).send({success: false, message: 'User not found'});
+    return;
+  }
+  const token = fastify.generateToken(data.id, data.name);
+  return {success: true, data, token};
 };
