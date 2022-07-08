@@ -13,7 +13,7 @@ export const createContestHandler = async (
   const doc: ContestSchema = {
     title: request.body.title,
     category: request.body.category,
-    movieId: request.body.movieId || '',
+    movieId: request.body.movieId,
     sponsoredBy: request.body.sponsoredBy,
     sponsoredByLogo: request.body.sponsoredByLogo,
     bannerImageUrl: request.body.bannerImageUrl,

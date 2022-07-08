@@ -1,4 +1,5 @@
 import {RouteShorthandOptions} from 'fastify';
+import {CONTEST_CATEGORY} from '../../models/contest';
 
 const contestTypeObject = {
   type: 'object',
@@ -6,7 +7,7 @@ const contestTypeObject = {
     _id: {type: 'string'},
     title: {type: 'string'},
     category: {type: 'string'},
-    movieId: {type: 'string', nullable: true},
+    movieId: {type: 'string', nullable: true, minLength: 24, maxLength: 24},
     sponsoredBy: {type: 'string'},
     sponsoredByLogo: {type: 'string', nullable: true},
     bannerImageUrl: {type: 'string', nullable: true},
@@ -40,6 +41,7 @@ export const GetContestRequestOpts: RouteShorthandOptions = {
   schema: {
     headers: {
       type: 'object',
+      required: ['authorization'],
       properties: {
         authorization: {type: 'string'},
       },
@@ -74,7 +76,7 @@ export interface CreateContestRequest {
   };
   Body: {
     title: string;
-    category: string;
+    category: CONTEST_CATEGORY;
     movieId?: string;
     sponsoredBy: string;
     sponsoredByLogo?: string;
@@ -93,6 +95,7 @@ export const CreateContestRequestOpts: RouteShorthandOptions = {
   schema: {
     headers: {
       type: 'object',
+      required: ['authorization'],
       properties: {
         authorization: {type: 'string'},
       },
@@ -108,7 +111,7 @@ export const CreateContestRequestOpts: RouteShorthandOptions = {
         sponsoredByLogo: {type: 'string'},
         bannerImageUrl: {type: 'string', format: 'uri'},
         videoUrl: {type: 'string', format: 'uri'},
-        entryFee: {type: 'number', minimum: 1},
+        entryFee: {type: 'number', minimum: 0},
         topPrize: {type: 'string'},
         prizeRatio: {type: 'string'},
         topWinners: {type: 'string'},

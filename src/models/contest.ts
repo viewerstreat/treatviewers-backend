@@ -1,9 +1,14 @@
 import {ObjectId} from '@fastify/mongodb';
 
+export enum CONTEST_CATEGORY {
+  MOVIE = 'movie',
+  OTHERS = 'others',
+}
+
 export interface ContestSchema {
   _id?: string | ObjectId;
   title?: string;
-  category?: string;
+  category?: CONTEST_CATEGORY;
   movieId?: string;
   sponsoredBy?: string;
   sponsoredByLogo?: string;
