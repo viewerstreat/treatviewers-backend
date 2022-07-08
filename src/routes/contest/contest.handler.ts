@@ -45,14 +45,15 @@ export const getContestHandler = async (
   fastify: FastifyInstance,
 ) => {
   // generate the findBy query
-  const findBy: Filter<ContestSchema> = {
-    isActive: true,
-    endTime: {$gt: fastify.getCurrentTimestamp()},
-  };
+  const findBy: Filter<ContestSchema> = {isActive: true};
   // filter by _id if it is passed in the query parameters
   if (request.query._id) {
     let oid = new fastify.mongo.ObjectId(request.query._id);
     findBy._id = oid;
+  }
+  // filter by movieId is it is passed in the query parameters
+  if (request.query.movieId) {
+    findBy.movieId = request.query.movieId;
   }
 
   const sortBy: Sort = {_id: -1};

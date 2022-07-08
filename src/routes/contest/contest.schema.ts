@@ -30,6 +30,7 @@ export interface GetContestRequest {
   };
   Querystring: {
     _id?: string;
+    movieId?: string;
     pageSize?: number;
     pageNo?: number;
   };
@@ -46,7 +47,8 @@ export const GetContestRequestOpts: RouteShorthandOptions = {
     querystring: {
       type: 'object',
       properties: {
-        _id: {type: 'string'},
+        _id: {type: 'string', minLength: 24, maxLength: 24},
+        movieId: {type: 'string', minLength: 24, maxLength: 24},
         pageSize: {type: 'number'},
         pageNo: {type: 'number'},
       },
