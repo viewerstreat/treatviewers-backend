@@ -4,3 +4,4 @@
 - Create index on `clips` collection on `name` field `unique`.
 - Create index on `questions` collection on `contestId` and `questionNo` (composite key).
 - Create index on `favourites` collection on `userId` and `mediaId` (composite key).
+- Create index on `movieViews` collection on `userId` and `movieId` (composite key).

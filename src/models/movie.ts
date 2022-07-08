@@ -9,6 +9,7 @@ export interface MovieSchema {
   bannerImageUrl?: string;
   viewCount?: number;
   likeCount?: number;
+  isLikedByMe?: boolean;
   sponsoredBy?: string;
   sponsoredByLogo?: string;
   releaseDate?: number;
@@ -35,4 +36,10 @@ export interface FavouriteSchema {
   isRemoved: boolean;
   createdTs?: number;
   updatedTs?: number;
+}
+
+export interface MovieViewSchema {
+  movieId: string;
+  userId: number;
+  updatedTs: number;
 }

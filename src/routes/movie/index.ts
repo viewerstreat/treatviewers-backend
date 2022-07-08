@@ -1,10 +1,19 @@
 import {FastifyPluginAsync} from 'fastify';
-import {createMovieHandler, getAllMoviesHandler} from './movie.handler';
+import {
+  addMovieViewHandler,
+  createMovieHandler,
+  getAllMoviesHandler,
+  getMovieDetailHandler,
+} from './movie.handler';
 import {
   GetMoviesRequestOpts,
   GetMoviesRequest,
   CreateMovieRequest,
   CreateMovieRequestOpts,
+  AddViewRequest,
+  AddViewReqOpts,
+  GetMovieDetailRequest,
+  GetMovieDetailReqOpts,
 } from './movie.schema';
 
 const movieRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
@@ -20,6 +29,20 @@ const movieRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     '/',
     {onRequest: [fastify.authenticate], ...CreateMovieRequestOpts},
     (request, reply) => createMovieHandler(request, reply, fastify),
+  );
+
+  // add movie view
+  fastify.post<AddViewRequest>(
+    '/addView',
+    {onRequest: [fastify.authenticate], ...AddViewReqOpts},
+    (request, reply) => addMovieViewHandler(request, reply, fastify),
+  );
+
+  // get movie details
+  fastify.get<GetMovieDetailRequest>(
+    '/details',
+    {onRequest: [fastify.authenticate], ...GetMovieDetailReqOpts},
+    (request, reply) => getMovieDetailHandler(request, reply, fastify),
   );
 };
 

@@ -13,8 +13,9 @@ const movieTypeObject = {
     },
     bannerImageUrl: {type: 'string'},
     videoUrl: {type: 'string'},
-    viewCount: {type: 'number'},
-    likeCount: {type: 'number'},
+    viewCount: {type: 'number', nullable: true},
+    likeCount: {type: 'number', nullable: true},
+    isLikedByMe: {type: 'boolean', nullable: true},
     sponsoredBy: {type: 'string'},
     sponsoredByLogo: {type: 'string', nullable: true},
     releaseDate: {type: 'number'},
@@ -43,6 +44,7 @@ export const GetMoviesRequestOpts: RouteShorthandOptions = {
   schema: {
     headers: {
       type: 'object',
+      required: ['authorization'],
       properties: {
         authorization: {type: 'string'},
       },
@@ -92,6 +94,7 @@ export const CreateMovieRequestOpts: RouteShorthandOptions = {
   schema: {
     headers: {
       type: 'object',
+      required: ['authorization'],
       properties: {
         authorization: {type: 'string'},
       },
@@ -100,19 +103,21 @@ export const CreateMovieRequestOpts: RouteShorthandOptions = {
       type: 'object',
       required: ['name', 'description', 'bannerImageUrl', 'videoUrl', 'sponsoredBy', 'releaseDate'],
       properties: {
-        name: {type: 'string'},
-        description: {type: 'string'},
+        name: {type: 'string', minLength: 1, maxLength: 100},
+        description: {type: 'string', minLength: 1, maxLength: 100},
         tags: {
           type: 'array',
-          items: {type: 'string'},
+          nullable: true,
+          items: {type: 'string', minLength: 1, maxLength: 50},
         },
-        bannerImageUrl: {type: 'string'},
-        videoUrl: {type: 'string'},
-        sponsoredBy: {type: 'string'},
-        sponsoredByLogo: {type: 'string'},
+        bannerImageUrl: {type: 'string', format: 'uri'},
+        videoUrl: {type: 'string', format: 'uri'},
+        sponsoredBy: {type: 'string', minLength: 1},
+        sponsoredByLogo: {type: 'string', format: 'uri'},
         releaseDate: {type: 'number'},
         releaseOutlets: {
           type: 'array',
+          nullable: true,
           items: {type: 'string'},
         },
         moviePromotionExpiry: {type: 'number'},
@@ -124,6 +129,94 @@ export const CreateMovieRequestOpts: RouteShorthandOptions = {
         properties: {
           success: {type: 'boolean'},
           data: movieTypeObject,
+        },
+      },
+    },
+  },
+};
+
+export interface GetMovieDetailRequest {
+  Headers: {
+    authorization: string;
+  };
+  Querystring: {
+    movieId: string;
+  };
+}
+
+export const GetMovieDetailReqOpts: RouteShorthandOptions = {
+  schema: {
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
+    querystring: {
+      type: 'object',
+      required: ['movieId'],
+      properties: {
+        movieId: {type: 'string', minLength: 24, maxLength: 24},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          data: movieTypeObject,
+        },
+      },
+      404: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
+    },
+  },
+};
+
+export interface AddViewRequest {
+  Headers: {
+    authorization: string;
+  };
+  Body: {
+    movieId: string;
+  };
+}
+
+export const AddViewReqOpts: RouteShorthandOptions = {
+  schema: {
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
+    body: {
+      type: 'object',
+      required: ['movieId'],
+      properties: {
+        movieId: {type: 'string', minLength: 24, maxLength: 24},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
+      404: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
         },
       },
     },
