@@ -39,10 +39,8 @@ const movieRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   );
 
   // get movie details
-  fastify.get<GetMovieDetailRequest>(
-    '/details',
-    {onRequest: [fastify.authenticate], ...GetMovieDetailReqOpts},
-    (request, reply) => getMovieDetailHandler(request, reply, fastify),
+  fastify.get<GetMovieDetailRequest>('/details', GetMovieDetailReqOpts, (request, reply) =>
+    getMovieDetailHandler(request, reply, fastify),
   );
 };
 

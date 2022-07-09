@@ -26,33 +26,24 @@ const contestTypeObject = {
 };
 
 export interface GetContestRequest {
-  Headers: {
-    authorization: string;
-  };
   Querystring: {
     _id?: string;
     movieId?: string;
     pageSize?: number;
-    pageNo?: number;
+    pageIndex?: number;
   };
 }
 
 export const GetContestRequestOpts: RouteShorthandOptions = {
   schema: {
-    headers: {
-      type: 'object',
-      required: ['authorization'],
-      properties: {
-        authorization: {type: 'string'},
-      },
-    },
+    description: 'get the contest list. filter can be applied by `_id` and `movieId`. ',
     querystring: {
       type: 'object',
       properties: {
         _id: {type: 'string', minLength: 24, maxLength: 24},
         movieId: {type: 'string', minLength: 24, maxLength: 24},
         pageSize: {type: 'number'},
-        pageNo: {type: 'number'},
+        pageIndex: {type: 'number'},
       },
     },
     response: {

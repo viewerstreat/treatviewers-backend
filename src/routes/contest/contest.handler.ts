@@ -57,7 +57,7 @@ export const getContestHandler = async (
   }
 
   const sortBy: Sort = {_id: -1};
-  const pageNo = request.query.pageNo || 0;
+  const pageNo = request.query.pageIndex || 0;
   const pageSize = request.query.pageSize || fastify.getDefaultPageSize();
   const result = await fastify.mongo.db
     ?.collection<ContestSchema>(COLL_CONTESTS)

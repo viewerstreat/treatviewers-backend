@@ -136,9 +136,6 @@ export const CreateMovieRequestOpts: RouteShorthandOptions = {
 };
 
 export interface GetMovieDetailRequest {
-  Headers: {
-    authorization: string;
-  };
   Querystring: {
     movieId: string;
   };
@@ -146,13 +143,7 @@ export interface GetMovieDetailRequest {
 
 export const GetMovieDetailReqOpts: RouteShorthandOptions = {
   schema: {
-    headers: {
-      type: 'object',
-      required: ['authorization'],
-      properties: {
-        authorization: {type: 'string'},
-      },
-    },
+    description: 'Get the details of movie of a particular movie. `movieId` is required parameter.',
     querystring: {
       type: 'object',
       required: ['movieId'],

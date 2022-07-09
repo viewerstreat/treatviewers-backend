@@ -16,10 +16,8 @@ const contestRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> =>
   );
 
   // get contest
-  fastify.get<GetContestRequest>(
-    '/',
-    {onRequest: [fastify.authenticate], ...GetContestRequestOpts},
-    (request, reply) => getContestHandler(request, reply, fastify),
+  fastify.get<GetContestRequest>('/', GetContestRequestOpts, (request, reply) =>
+    getContestHandler(request, reply, fastify),
   );
 };
 
