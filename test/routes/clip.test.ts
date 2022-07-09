@@ -4,7 +4,8 @@ import {build} from '../helper';
 test('clip routes', async (t) => {
   const app = await build(t);
   const tokenRes = await app.inject({
-    url: '/api/v1/getToken',
+    url: '/api/v1/tempApiGetToken',
+    query: {userId: '1', name: 'test'},
   });
   const {token} = JSON.parse(tokenRes.payload);
   t.test('unauthenticated create clip', async (ct) => {
@@ -91,17 +92,9 @@ test('clip routes', async (t) => {
     ct.equal(res.statusCode, 500);
   });
 
-  t.test('unauthenticated get clip', async (ct) => {
-    const res = await app.inject({
-      url: '/api/v1/clip',
-    });
-    ct.equal(res.statusCode, 401);
-  });
-
   t.test('get clip', async (ct) => {
     const res = await app.inject({
       url: '/api/v1/clip',
-      headers: {authorization: `Bearer ${token}`},
     });
     ct.equal(res.statusCode, 200);
     const result = JSON.parse(res.payload);

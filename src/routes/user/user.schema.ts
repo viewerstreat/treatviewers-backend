@@ -17,6 +17,7 @@ const userTypeObject = {
 
 export const GetAllUsersOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Get list of users',
     response: {
       200: {
         type: 'object',
@@ -69,9 +70,8 @@ interface CreateUserSchema {
 
 export const CreateUserOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Create User POST request API endpoint',
     body: {
-      title: 'Create User',
-      description: 'Create User POST request API endpoint',
       type: 'object',
       required: ['name', 'phone'],
       properties: {
@@ -113,6 +113,14 @@ export interface UpdateUserRequest {
 
 export const UpdateUserOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Update user name or profile pic',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string', minLength: 1},
+      },
+    },
     body: {
       type: 'object',
       properties: {
@@ -154,6 +162,7 @@ export interface VerifyUserRequest {
 
 export const VerifyUserRequestOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Verify whether a valid user by phone no',
     querystring: {
       type: 'object',
       required: ['phone'],
@@ -189,6 +198,7 @@ export interface CheckOtpRequest {
 
 export const CheckOtpReqOpts: RouteShorthandOptions = {
   schema: {
+    description: 'verify otp',
     querystring: {
       type: 'object',
       required: ['phone', 'otp'],
@@ -225,6 +235,7 @@ export interface RenewTokenRequest {
 
 export const RenewTokenReqOpts: RouteShorthandOptions = {
   schema: {
+    description: 'renew token validating the previous token. `authorization` header is required.',
     headers: {
       type: 'object',
       required: ['authorization'],

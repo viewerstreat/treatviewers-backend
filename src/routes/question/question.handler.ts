@@ -1,4 +1,5 @@
-import {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
+import {ObjectId} from '@fastify/mongodb';
+import {FastifyReply, FastifyRequest} from 'fastify';
 import {Filter} from 'mongodb';
 import {ContestSchema} from '../../models/contest';
 import {QuestionSchema} from '../../models/question';
@@ -8,7 +9,6 @@ import {CreateQuestionRequest, GetQuestionRequest} from './question.schema';
 export const createQuestionHandler = async (
   request: FastifyRequest<CreateQuestionRequest>,
   reply: FastifyReply,
-  fastify: FastifyInstance,
 ) => {
   // options must have one correct answer
   if (request.body.options.filter((el) => el.isCorrect).length !== 1) {
@@ -26,15 +26,15 @@ export const createQuestionHandler = async (
   }
 
   // first validate whether valid contestId
-  const findBy = {_id: new fastify.mongo.ObjectId(request.body.contestId)};
-  const rs = await fastify.mongo.db?.collection<ContestSchema>(COLL_CONTESTS).findOne(findBy);
+  const findBy = {_id: new ObjectId(request.body.contestId)};
+  const rs = await request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS).findOne(findBy);
   if (!rs) {
     reply
       .status(400)
       .send({success: false, message: `Not a valid contestId: ${request.body.contestId}`});
     return;
   }
-  const collection = fastify.mongo.db?.collection<QuestionSchema>(COLL_QUESTIONS);
+  const collection = request.mongo.db?.collection<QuestionSchema>(COLL_QUESTIONS);
   const doc: QuestionSchema = {
     contestId: request.body.contestId,
     questionNo: request.body.questionNo,
@@ -42,7 +42,7 @@ export const createQuestionHandler = async (
     options: request.body.options,
     isActive: true,
     createdBy: request.user.id,
-    createdTs: fastify.getCurrentTimestamp(),
+    createdTs: request.getCurrentTimestamp(),
   };
   const result = await collection?.insertOne(doc);
   const data: QuestionSchema = {
@@ -56,7 +56,6 @@ export const createQuestionHandler = async (
 export const getQuestionHandler = async (
   request: FastifyRequest<GetQuestionRequest>,
   reply: FastifyReply,
-  fastify: FastifyInstance,
 ) => {
   // generate the findBy query
   const findBy: Filter<QuestionSchema> = {
@@ -64,7 +63,7 @@ export const getQuestionHandler = async (
     contestId: request.query.contestId,
     questionNo: Number(request.query.questionNo),
   };
-  const result = await fastify.mongo.db?.collection<QuestionSchema>(COLL_QUESTIONS).findOne(findBy);
+  const result = await request.mongo.db?.collection<QuestionSchema>(COLL_QUESTIONS).findOne(findBy);
   if (!result) {
     reply.status(404).send({
       success: false,

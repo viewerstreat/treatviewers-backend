@@ -9,18 +9,10 @@ import {
 
 const clipRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   // create clip
-  fastify.post<CreateClipRequest>(
-    '/',
-    {onRequest: [fastify.authenticate], ...CreateClipRequestOpts},
-    (request, reply) => createClipHandler(request, reply, fastify),
-  );
+  fastify.post<CreateClipRequest>('/', CreateClipRequestOpts, createClipHandler);
 
   // get clip
-  fastify.get<GetClipRequest>(
-    '/',
-    {onRequest: [fastify.authenticate], ...GetClipRequestOpts},
-    (request, reply) => getClipHandler(request, reply, fastify),
-  );
+  fastify.get<GetClipRequest>('/', GetClipRequestOpts, getClipHandler);
 };
 
 export default clipRoute;

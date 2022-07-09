@@ -1,6 +1,6 @@
-import {FastifyInstance} from 'fastify';
+import {FastifyRequest} from 'fastify';
 import {OtpSchema, UserSchema} from '../../models/user';
-import {OTP_LENGTH} from '../../utils/config';
+import {OTP_LENGTH, OTP_VALIDITY_MINS} from '../../utils/config';
 import {COLL_OTPS, COLL_USERS} from '../../utils/constants';
 
 // generate random otp
@@ -21,8 +21,8 @@ export const sendOtp = async (phone: string, otp: string): Promise<boolean> => {
 };
 
 // save otp for user
-export const saveOtp = async (userId: number, fastify: FastifyInstance) => {
-  const userColl = fastify.mongo.db?.collection<UserSchema>(COLL_USERS);
+export const saveOtp = async (userId: number, request: FastifyRequest) => {
+  const userColl = request.mongo.db?.collection<UserSchema>(COLL_USERS);
   const result = await userColl?.findOne({id: userId});
   if (!result) {
     throw new Error('User not found');
@@ -32,10 +32,10 @@ export const saveOtp = async (userId: number, fastify: FastifyInstance) => {
   }
   const otp = generateOtp(OTP_LENGTH);
   await sendOtp(result.phone, otp);
-  const collection = fastify.mongo.db?.collection<OtpSchema>(COLL_OTPS);
+  const collection = request.mongo.db?.collection<OtpSchema>(COLL_OTPS);
   await collection?.insertOne({
     userId,
     otp,
-    validTill: fastify.getCurrentTimestamp() + 5 * 60 * 1000,
+    validTill: request.getCurrentTimestamp() + OTP_VALIDITY_MINS * 60 * 1000,
   });
 };

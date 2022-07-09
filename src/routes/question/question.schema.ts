@@ -41,6 +41,7 @@ export interface GetQuestionRequest {
 
 export const GetQuestionRequestOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Get a question details',
     headers: {
       type: 'object',
       required: ['authorization'],
@@ -82,6 +83,7 @@ export interface CreateQuestionRequest {
 
 export const CreateQuestionRequestOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Create a question',
     headers: {
       type: 'object',
       required: ['authorization'],

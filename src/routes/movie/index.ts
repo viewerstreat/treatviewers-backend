@@ -4,6 +4,7 @@ import {
   createMovieHandler,
   getAllMoviesHandler,
   getMovieDetailHandler,
+  isLikedByMeHandler,
 } from './movie.handler';
 import {
   GetMoviesRequestOpts,
@@ -14,34 +15,25 @@ import {
   AddViewReqOpts,
   GetMovieDetailRequest,
   GetMovieDetailReqOpts,
+  IsLikeByMeRequest,
+  IsLikeByMeReqOpts,
 } from './movie.schema';
 
 const movieRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   // get all movies list
-  fastify.get<GetMoviesRequest>(
-    '/',
-    {onRequest: [fastify.authenticate], ...GetMoviesRequestOpts},
-    (request, reply) => getAllMoviesHandler(request, reply, fastify),
-  );
+  fastify.get<GetMoviesRequest>('/', GetMoviesRequestOpts, getAllMoviesHandler);
 
   // create movie
-  fastify.post<CreateMovieRequest>(
-    '/',
-    {onRequest: [fastify.authenticate], ...CreateMovieRequestOpts},
-    (request, reply) => createMovieHandler(request, reply, fastify),
-  );
+  fastify.post<CreateMovieRequest>('/', CreateMovieRequestOpts, createMovieHandler);
 
   // add movie view
-  fastify.post<AddViewRequest>(
-    '/addView',
-    {onRequest: [fastify.authenticate], ...AddViewReqOpts},
-    (request, reply) => addMovieViewHandler(request, reply, fastify),
-  );
+  fastify.post<AddViewRequest>('/addView', AddViewReqOpts, addMovieViewHandler);
 
   // get movie details
-  fastify.get<GetMovieDetailRequest>('/details', GetMovieDetailReqOpts, (request, reply) =>
-    getMovieDetailHandler(request, reply, fastify),
-  );
+  fastify.get<GetMovieDetailRequest>('/details', GetMovieDetailReqOpts, getMovieDetailHandler);
+
+  // is movie like by me
+  fastify.get<IsLikeByMeRequest>('/isLikedByMe', IsLikeByMeReqOpts, isLikedByMeHandler);
 };
 
 export default movieRoute;

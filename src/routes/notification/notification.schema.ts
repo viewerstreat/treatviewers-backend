@@ -24,6 +24,7 @@ export interface GetNotiRequest {
 
 export const GetNotiReqOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Get all notifications',
     headers: {
       type: 'object',
       required: ['authorization'],
@@ -55,6 +56,7 @@ export const GetNotiReqOpts: RouteShorthandOptions = {
 
 export const ClearAllNotiReqOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Clear all notifications',
     headers: {
       type: 'object',
       required: ['authorization'],
@@ -85,6 +87,7 @@ export interface ClearNotiRequest {
 
 export const ClearNotiReqOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Clear a notification.',
     headers: {
       type: 'object',
       required: ['authorization'],
@@ -122,6 +125,7 @@ export interface MarkNotiReadRequest {
 
 export const MarkNotiReadReqOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Mark a notification as read',
     headers: {
       type: 'object',
       required: ['authorization'],
@@ -150,6 +154,7 @@ export const MarkNotiReadReqOpts: RouteShorthandOptions = {
 
 export const MarkAllNotiReadReqOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Mark All notification as read',
     headers: {
       type: 'object',
       required: ['authorization'],

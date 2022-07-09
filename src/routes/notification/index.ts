@@ -19,39 +19,19 @@ import {
 
 const notiRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   // get all notification
-  fastify.get<GetNotiRequest>(
-    '/',
-    {onRequest: [fastify.authenticate], ...GetNotiReqOpts},
-    (request, reply) => getNotiHandler(request, reply, fastify),
-  );
+  fastify.get<GetNotiRequest>('/', GetNotiReqOpts, getNotiHandler);
 
   // clear notification
-  fastify.post<ClearNotiRequest>(
-    '/clear',
-    {onRequest: [fastify.authenticate], ...ClearNotiReqOpts},
-    (request, reply) => clearNotiHandler(request, reply, fastify),
-  );
+  fastify.post<ClearNotiRequest>('/clear', ClearNotiReqOpts, clearNotiHandler);
 
   // clear all notification
-  fastify.post<ClearNotiRequest>(
-    '/clearall',
-    {onRequest: [fastify.authenticate], ...ClearAllNotiReqOpts},
-    (request, reply) => clearAllNotiHandler(request, reply, fastify),
-  );
+  fastify.post<ClearNotiRequest>('/clearall', ClearAllNotiReqOpts, clearAllNotiHandler);
 
   // mark notification as read
-  fastify.post<MarkNotiReadRequest>(
-    '/markRead',
-    {onRequest: [fastify.authenticate], ...MarkNotiReadReqOpts},
-    (request, reply) => markNotiReadHandler(request, reply, fastify),
-  );
+  fastify.post<MarkNotiReadRequest>('/markRead', MarkNotiReadReqOpts, markNotiReadHandler);
 
   // mark all notification as read
-  fastify.post(
-    '/markAllRead',
-    {onRequest: [fastify.authenticate], ...MarkAllNotiReadReqOpts},
-    (request, reply) => markAllNotiReadHandler(request, reply, fastify),
-  );
+  fastify.post('/markAllRead', MarkAllNotiReadReqOpts, markAllNotiReadHandler);
 };
 
 export default notiRoute;

@@ -9,7 +9,6 @@ export interface MovieSchema {
   bannerImageUrl?: string;
   viewCount?: number;
   likeCount?: number;
-  isLikedByMe?: boolean;
   sponsoredBy?: string;
   sponsoredByLogo?: string;
   releaseDate?: number;

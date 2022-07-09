@@ -4,7 +4,8 @@ import {build} from '../helper';
 test('contest routes', async (t) => {
   const app = await build(t);
   const tokenRes = await app.inject({
-    url: '/api/v1/getToken',
+    url: '/api/v1/tempApiGetToken',
+    query: {userId: '1', name: 'test'},
   });
   const {token} = JSON.parse(tokenRes.payload);
 
@@ -29,8 +30,8 @@ test('contest routes', async (t) => {
     topPrize: 'topPrize',
     prizeRatio: 'prizeRatio',
     topWinners: 'topWinners',
-    startTime: 1665996305577,
-    endTime: 1666996305577,
+    startTime: new Date().getTime() + 1 * 24 * 60 * 60 * 1000,
+    endTime: new Date().getTime() + 10 * 24 * 60 * 60 * 1000,
   };
 
   t.test('create contest without title', async (ct) => {
@@ -89,26 +90,6 @@ test('contest routes', async (t) => {
       url: '/api/v1/contest',
       headers: {authorization: `Bearer ${token}`},
       payload: {...contestPayload, sponsoredBy: null},
-    });
-    ct.equal(res.statusCode, 400);
-  });
-
-  t.test('create contest without entryFee', async (ct) => {
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/v1/contest',
-      headers: {authorization: `Bearer ${token}`},
-      payload: {...contestPayload, entryFee: null},
-    });
-    ct.equal(res.statusCode, 400);
-  });
-
-  t.test('create contest zero entryFee', async (ct) => {
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/v1/contest',
-      headers: {authorization: `Bearer ${token}`},
-      payload: {...contestPayload, entryFee: 0},
     });
     ct.equal(res.statusCode, 400);
   });

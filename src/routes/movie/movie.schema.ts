@@ -15,7 +15,6 @@ const movieTypeObject = {
     videoUrl: {type: 'string'},
     viewCount: {type: 'number', nullable: true},
     likeCount: {type: 'number', nullable: true},
-    isLikedByMe: {type: 'boolean', nullable: true},
     sponsoredBy: {type: 'string'},
     sponsoredByLogo: {type: 'string', nullable: true},
     releaseDate: {type: 'number'},
@@ -30,9 +29,6 @@ const movieTypeObject = {
 };
 
 export interface GetMoviesRequest {
-  Headers: {
-    authorization: string;
-  };
   Querystring: {
     _id?: string;
     pageSize?: number;
@@ -42,13 +38,6 @@ export interface GetMoviesRequest {
 
 export const GetMoviesRequestOpts: RouteShorthandOptions = {
   schema: {
-    headers: {
-      type: 'object',
-      required: ['authorization'],
-      properties: {
-        authorization: {type: 'string'},
-      },
-    },
     querystring: {
       type: 'object',
       properties: {
@@ -92,6 +81,7 @@ export interface CreateMovieRequest {
 
 export const CreateMovieRequestOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Create movie API.',
     headers: {
       type: 'object',
       required: ['authorization'],
@@ -104,7 +94,7 @@ export const CreateMovieRequestOpts: RouteShorthandOptions = {
       required: ['name', 'description', 'bannerImageUrl', 'videoUrl', 'sponsoredBy', 'releaseDate'],
       properties: {
         name: {type: 'string', minLength: 1, maxLength: 100},
-        description: {type: 'string', minLength: 1, maxLength: 100},
+        description: {type: 'string', minLength: 1},
         tags: {
           type: 'array',
           nullable: true,
@@ -181,6 +171,7 @@ export interface AddViewRequest {
 
 export const AddViewReqOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Add View Count for movie. Authorization is required.',
     headers: {
       type: 'object',
       required: ['authorization'],
@@ -208,6 +199,41 @@ export const AddViewReqOpts: RouteShorthandOptions = {
         properties: {
           success: {type: 'boolean'},
           message: {type: 'string'},
+        },
+      },
+    },
+  },
+};
+
+export interface IsLikeByMeRequest {
+  Querystring: {
+    movieId: string;
+  };
+}
+
+export const IsLikeByMeReqOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'is the movie liked by me. `authorization` header is required.',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
+    querystring: {
+      type: 'object',
+      required: ['movieId'],
+      properties: {
+        movieId: {type: 'string', minLength: 24, maxLength: 24},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          isLikedByMe: {type: 'boolean'},
         },
       },
     },

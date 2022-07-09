@@ -4,7 +4,8 @@ import {build} from '../helper';
 test('movie routes', async (t) => {
   const app = await build(t);
   const tokenRes = await app.inject({
-    url: '/api/v1/getToken',
+    url: '/api/v1/tempApiGetToken',
+    query: {userId: '1', name: 'test'},
   });
   const {token} = JSON.parse(tokenRes.payload);
 

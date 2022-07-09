@@ -9,18 +9,10 @@ import {
 
 const favouriteRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   // update favourite
-  fastify.post<UpdateFavouriteRequest>(
-    '/',
-    {onRequest: [fastify.authenticate], ...UpdateFavouriteReqOpts},
-    (request, reply) => updateFavouriteHandler(request, reply, fastify),
-  );
+  fastify.post<UpdateFavouriteRequest>('/', UpdateFavouriteReqOpts, updateFavouriteHandler);
 
   // get favourite list
-  fastify.get<GetFavouriteRequest>(
-    '/',
-    {onRequest: [fastify.authenticate], ...GetFavouriteReqOpts},
-    (request, reply) => getFavouriteHandler(request, reply, fastify),
-  );
+  fastify.get<GetFavouriteRequest>('/', GetFavouriteReqOpts, getFavouriteHandler);
 };
 
 export default favouriteRoute;

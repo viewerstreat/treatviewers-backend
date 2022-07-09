@@ -13,7 +13,8 @@ test('root route', async (t) => {
 
   t.test('token route', async (ct) => {
     const res = await app.inject({
-      url: '/api/v1/getToken',
+      url: '/api/v1/tempApiGetToken',
+      query: {userId: '1', name: 'test'},
     });
     const payload = JSON.parse(res.payload);
     ct.ok(payload.success);

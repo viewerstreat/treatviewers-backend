@@ -9,16 +9,10 @@ import {
 
 const contestRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   // create contest
-  fastify.post<CreateContestRequest>(
-    '/',
-    {onRequest: [fastify.authenticate], ...CreateContestRequestOpts},
-    (request, reply) => createContestHandler(request, reply, fastify),
-  );
+  fastify.post<CreateContestRequest>('/', CreateContestRequestOpts, createContestHandler);
 
   // get contest
-  fastify.get<GetContestRequest>('/', GetContestRequestOpts, (request, reply) =>
-    getContestHandler(request, reply, fastify),
-  );
+  fastify.get<GetContestRequest>('/', GetContestRequestOpts, getContestHandler);
 };
 
 export default contestRoute;

@@ -15,30 +15,22 @@ const clipTypeObject = {
 };
 
 export interface GetClipRequest {
-  Headers: {
-    authorization: string;
-  };
   Querystring: {
     _id?: string;
     pageSize?: number;
-    pageNo?: number;
+    pageIndex?: number;
   };
 }
 
 export const GetClipRequestOpts: RouteShorthandOptions = {
   schema: {
-    headers: {
-      type: 'object',
-      properties: {
-        authorization: {type: 'string'},
-      },
-    },
+    description: 'get clip list. filter can be applied by `_id`.',
     querystring: {
       type: 'object',
       properties: {
-        _id: {type: 'string'},
+        _id: {type: 'string', minLength: 24, maxLength: 24},
         pageSize: {type: 'number'},
-        pageNo: {type: 'number'},
+        pageIndex: {type: 'number'},
       },
     },
     response: {
@@ -70,8 +62,11 @@ export interface CreateClipRequest {
 
 export const CreateClipRequestOpts: RouteShorthandOptions = {
   schema: {
+    description:
+      'Create new clip. `name`, `description`, `bannerImageUrl`, `videoUrl` are mandatory parameters. Authorization required.',
     headers: {
       type: 'object',
+      required: ['authorization'],
       properties: {
         authorization: {type: 'string'},
       },

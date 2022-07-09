@@ -38,33 +38,19 @@ const userRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   // );
 
   // verify user
-  fastify.get<VerifyUserRequest>('/verify', VerifyUserRequestOpts, (request, reply) =>
-    verifyUserHandler(request, reply, fastify),
-  );
+  fastify.get<VerifyUserRequest>('/verify', VerifyUserRequestOpts, verifyUserHandler);
 
   // verify otp
-  fastify.get<CheckOtpRequest>('/checkOtp', CheckOtpReqOpts, (request, reply) =>
-    checkOtpHandler(request, reply, fastify),
-  );
+  fastify.get<CheckOtpRequest>('/checkOtp', CheckOtpReqOpts, checkOtpHandler);
 
   // renew token
-  fastify.get<RenewTokenRequest>(
-    '/renewToken',
-    {onRequest: [fastify.authenticate], ...RenewTokenReqOpts},
-    (request, reply) => renewTokenHandler(request, reply, fastify),
-  );
+  fastify.get<RenewTokenRequest>('/renewToken', RenewTokenReqOpts, renewTokenHandler);
 
   // create user
-  fastify.post<CreateUserRequest>('/create', CreateUserOpts, (request, reply) =>
-    createUserHandler(request, reply, fastify),
-  );
+  fastify.post<CreateUserRequest>('/create', CreateUserOpts, createUserHandler);
 
-  // create user
-  fastify.post<UpdateUserRequest>(
-    '/update',
-    {onRequest: [fastify.authenticate], ...UpdateUserOpts},
-    (request, reply) => updateUserHandler(request, reply, fastify),
-  );
+  // update user
+  fastify.post<UpdateUserRequest>('/update', UpdateUserOpts, updateUserHandler);
 };
 
 export default userRoute;

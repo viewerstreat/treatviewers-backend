@@ -84,6 +84,7 @@ export interface CreateContestRequest {
 
 export const CreateContestRequestOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Create a new contest',
     headers: {
       type: 'object',
       required: ['authorization'],

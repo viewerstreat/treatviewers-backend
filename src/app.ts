@@ -7,7 +7,7 @@ import FastifyCors from '@fastify/cors';
 import fastifyCompress from '@fastify/compress';
 import FastifyStatic from '@fastify/static';
 import FastifySwagger from '@fastify/swagger';
-import {RELATIVE_DIST_STATIC_FOLDER, SWAGGER_CONFIG_OPTS} from './utils/config';
+import {API_ROUTE_PREFIX, RELATIVE_DIST_STATIC_FOLDER, SWAGGER_CONFIG_OPTS} from './utils/config';
 
 export type AppOptions = {
   isAwesomeApp: boolean;
@@ -40,7 +40,7 @@ const app: FastifyPluginAsync<AppOptions> = async (fastify, opts): Promise<void>
   // This loads all plugins defined in routes
   fastify.register(AutoLoad, {
     dir: join(__dirname, 'routes'),
-    options: {...opts, prefix: '/api/v1'},
+    options: {...opts, prefix: API_ROUTE_PREFIX},
   });
 };
 

@@ -12,6 +12,14 @@ export interface UpdateFavouriteRequest {
 
 export const UpdateFavouriteReqOpts: RouteShorthandOptions = {
   schema: {
+    description: 'Toggle favourite for movie and clip. authorization is required.',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
     body: {
       type: 'object',
       required: ['mediaType', 'mediaId', 'mediaName', 'bannerImageUrl'],
@@ -51,13 +59,21 @@ export interface GetFavouriteRequest {
 
 export const GetFavouriteReqOpts: RouteShorthandOptions = {
   schema: {
+    description: 'get list of favourite movie or clip. authorization is required.',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
     querystring: {
       type: 'object',
       required: ['mediaType'],
       properties: {
         mediaType: {enum: ['movie', 'clip']},
         pageIndex: {type: 'number', minimum: 0},
-        pageSize: {type: 'number', minimum: 5},
+        pageSize: {type: 'number', minimum: 1},
       },
     },
     response: {
