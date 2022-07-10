@@ -10,6 +10,8 @@ const playTrackerObject = {
     initTs: {type: 'number'},
     paidTs: {type: 'number'},
     startTs: {type: 'number'},
+    currQuestionNo: {type: 'number'},
+    totalQuestions: {type: 'number'},
   },
 };
 
@@ -17,12 +19,12 @@ export interface PlayTrackerInitReq {
   Headers: {
     authorization: string;
   };
-  Body: {
+  Querystring: {
     contestId: string;
   };
 }
 
-export const PlayTrackerInitOpts: RouteShorthandOptions = {
+export const PlayTrackerOpts: RouteShorthandOptions = {
   schema: {
     description: 'Play Tracker initialize or resume the existing play tracker',
     headers: {
@@ -32,7 +34,7 @@ export const PlayTrackerInitOpts: RouteShorthandOptions = {
         authorization: {type: 'string'},
       },
     },
-    body: {
+    querystring: {
       type: 'object',
       required: ['contestId'],
       properties: {

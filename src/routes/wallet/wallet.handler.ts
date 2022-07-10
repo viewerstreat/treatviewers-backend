@@ -2,13 +2,19 @@ import {ObjectId} from '@fastify/mongodb';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {Filter, ReadPreference, TransactionOptions, UpdateFilter} from 'mongodb';
 import {ContestSchema} from '../../models/contest';
+import {PlayTrackerSchema, PLAY_STATUS} from '../../models/playTracker';
 import {
   TRANSACTION_STATUS,
   WalletSchema,
   WalletTransactionSchema,
   WALLET_TRANSACTION_TYPE,
 } from '../../models/wallet';
-import {COLL_CONTESTS, COLL_WALLETS, COLL_WALLET_TRANSACTIONS} from '../../utils/constants';
+import {
+  COLL_CONTESTS,
+  COLL_PLAY_TRACKERS,
+  COLL_WALLETS,
+  COLL_WALLET_TRANSACTIONS,
+} from '../../utils/constants';
 import {AddBalEndRequest, AddBalInitRequest, PayContestRequest} from './wallet.schema';
 
 // get user's current wallet balance
@@ -178,12 +184,132 @@ export const addBalEndHandler = async (request: AddBalEndFastifyReq, reply: Fast
 };
 
 // handler function for Pay Contest route
+// check for valid contestId
+// check for wallet balance > entry Fee
+// if the playTracker already exists and status is STARTED or FINISHED
+// then return 409
+// if playTracker is not created for the contestId and userId
+// then create playTracker and update status to PAID
 type PayContestFstReq = FastifyRequest<PayContestRequest>;
 export const payContestHandler = async (request: PayContestFstReq, reply: FastifyReply) => {
   const collContest = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
-  const result = await collContest?.findOne({_id: new ObjectId(request.body.contestId)});
-  if (!result) {
-    reply.status(404).send({status: false, message: 'contest not found'});
+  const collPlayTracker = request.mongo.db?.collection<PlayTrackerSchema>(COLL_PLAY_TRACKERS);
+  const collWallet = request.mongo.db?.collection<WalletSchema>(COLL_WALLETS);
+  const collTrans = request.mongo.db?.collection<WalletTransactionSchema>(COLL_WALLET_TRANSACTIONS);
+  const userId = request.user.id;
+  const {contestId} = request.body;
+  // check if the contestId is valid
+  const contest = await collContest?.findOne({_id: new ObjectId(contestId)});
+  if (!contest) {
+    reply.status(404).send({success: false, message: 'contest not found'});
     return;
+  }
+  // check if the playTracker exists for the userId and contestId
+  const playTracker = await collPlayTracker?.findOne({contestId, userId});
+  if (playTracker && playTracker.status === PLAY_STATUS.FINISHED) {
+    reply.status(409).send({success: false, message: 'contest already finished for user'});
+    return;
+  }
+  if (playTracker && playTracker.status === PLAY_STATUS.STARTED) {
+    reply.status(409).send({success: false, message: 'contest already started for user'});
+    return;
+  }
+  if (playTracker && playTracker.status === PLAY_STATUS.PAID) {
+    reply.status(409).send({success: false, message: 'contest already paid for user'});
+    return;
+  }
+  // if the playTracker do not exists then insert in INIT status
+  if (!playTracker) {
+    await collPlayTracker?.insertOne({
+      contestId,
+      userId,
+      status: PLAY_STATUS.INIT,
+      initTs: request.getCurrentTimestamp(),
+      createdTs: request.getCurrentTimestamp(),
+    });
+  }
+  // start a session
+  const session = request.mongo.client.startSession();
+  const transOpts: TransactionOptions = {
+    readPreference: ReadPreference.primary,
+    readConcern: {level: 'local'},
+    writeConcern: {w: 'majority'},
+  };
+  const updatedTs = request.getCurrentTimestamp();
+  const entryFee = contest.entryFee || 0;
+  try {
+    const transactionResult = await session.withTransaction(async () => {
+      // get balanceBefore value before subtracting entryFee
+      const balanceBefore = await getUserBalance(request);
+      // if balance is less than entryFee then throw error
+      if (balanceBefore < entryFee) {
+        throw new Error('Insufficient balance');
+      }
+      let balanceAfter = 0;
+      // subtract wallet balance
+      if (entryFee > 0) {
+        // update the wallet collection and decrement balance
+        const updtRslt = await collWallet?.findOneAndUpdate(
+          {userId, balance: {$gte: contest.entryFee}},
+          {$inc: {balance: -1 * entryFee}, $set: {updatedTs}},
+          {session, upsert: false, returnDocument: 'after'},
+        );
+        // check if update executed properly
+        if (!updtRslt?.ok) {
+          throw new Error('Not able to update wallet balance.');
+        }
+        // balanceAfter value from the returnDocument value
+        balanceAfter = updtRslt.value?.balance || 0;
+      }
+      // insert into walletTransaction with status COMPLETED
+      const insRslt = await collTrans?.insertOne(
+        {
+          userId,
+          transactionType: WALLET_TRANSACTION_TYPE.PAY_FOR_CONTEST,
+          amount: entryFee,
+          status: TRANSACTION_STATUS.COMPLETED,
+          balanceBefore,
+          balanceAfter,
+          remarks: `Pay for contest ${contestId}`,
+          createdTs: updatedTs,
+          updatedTs,
+        },
+        {session},
+      );
+      const walletTransactionId = insRslt?.insertedId.toString() || undefined;
+      // check if the insert operation failed
+      if (!walletTransactionId) {
+        throw new Error('not able to insert into walletTransaction');
+      }
+      // update the playTracker to PAID
+      const updtRslt = await collPlayTracker?.updateOne(
+        {contestId, userId},
+        {
+          $set: {
+            status: PLAY_STATUS.PAID,
+            paidTs: updatedTs,
+            walletTransactionId,
+            updatedTs,
+          },
+        },
+        {session, upsert: false},
+      );
+      // check if the update operation failed
+      const modifiedCount = updtRslt?.modifiedCount || 0;
+      if (modifiedCount !== 1) {
+        throw new Error('not able to update playTracker');
+      }
+    }, transOpts);
+    if (!transactionResult) {
+      reply.status(409).send({success: false, message: 'Unknown error occurred'});
+      return;
+    }
+    // return success reponse
+    return {success: true, message: 'Updated successfully'};
+  } catch (err: any) {
+    request.log.error(err);
+    reply.status(409).send({success: false, message: err.toString()});
+  } finally {
+    session.endSession();
   }
 };

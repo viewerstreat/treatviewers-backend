@@ -1,8 +1,8 @@
 export enum PLAY_STATUS {
-  INIT = 0,
-  PAID = 1,
-  STARTED = 2,
-  FINISHED = 3,
+  INIT = 'INIT',
+  PAID = 'PAID',
+  STARTED = 'STARTED',
+  FINISHED = 'FINISHED',
 }
 
 export interface Answer {
@@ -26,6 +26,7 @@ export interface PlayTrackerSchema {
   resumeTs?: number[];
   finishTs?: number;
   currQuestionNo?: number;
+  totalQuestions?: number;
   answers?: Answer[];
   score?: number;
   createdTs?: number;
