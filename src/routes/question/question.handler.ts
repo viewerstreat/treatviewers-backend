@@ -78,6 +78,7 @@ export const getNxtQuesHandler = async (request: GetNxtQFstReq, reply: FastifyRe
   const findBy: Filter<QuestionSchema> = {
     contestId: request.query.contestId,
     questionNo: {$gt: Number(request.query.currQuesNo)},
+    isActive: true,
   };
   const sortBy: Sort = {questionNo: 1};
   const collQues = request.mongo.db?.collection<QuestionSchema>(COLL_QUESTIONS);
