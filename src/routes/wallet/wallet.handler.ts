@@ -199,7 +199,12 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
   const userId = request.user.id;
   const {contestId} = request.body;
   // check if the contestId is valid
-  const contest = await collContest?.findOne({_id: new ObjectId(contestId)});
+  const filter: Filter<ContestSchema> = {
+    _id: new ObjectId(contestId),
+    isActive: true,
+    endTime: {$gt: request.getCurrentTimestamp()},
+  };
+  const contest = await collContest?.findOne(filter);
   if (!contest) {
     reply.status(404).send({success: false, message: 'contest not found'});
     return;

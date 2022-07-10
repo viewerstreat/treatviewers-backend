@@ -18,8 +18,8 @@ export interface ContestSchema {
   topPrize?: string;
   prizeRatio?: string;
   topWinners?: string;
-  startTime?: number;
-  endTime?: number;
+  startTime: number;
+  endTime: number;
   questionCount?: number;
   viewCount?: number;
   likeCount?: number;

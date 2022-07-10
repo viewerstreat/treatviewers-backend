@@ -15,8 +15,7 @@ const questionTypeObject = {
   type: 'object',
   required: ['contestId', 'questionNo', 'questionText', 'options'],
   properties: {
-    _id: {type: 'string', minLength: 1},
-    contestId: {type: 'string', minLength: 1},
+    contestId: {type: 'string', minLength: 24, maxLength: 24},
     questionNo: {type: 'number', minimum: 1},
     questionText: {type: 'string', minLength: 1},
     options: {
@@ -53,8 +52,48 @@ export const GetQuestionRequestOpts: RouteShorthandOptions = {
       type: 'object',
       required: ['contestId', 'questionNo'],
       properties: {
-        contestId: {type: 'string', minLength: 1},
+        contestId: {type: 'string', minLength: 24, maxLength: 24},
         questionNo: {type: 'number', minimum: 1},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          data: questionTypeObject,
+        },
+      },
+    },
+  },
+};
+
+export interface GetNxtQuesReq {
+  Headers: {
+    authorization: string;
+  };
+  Querystring: {
+    contestId: string;
+    currQuesNo: number;
+  };
+}
+
+export const GetNxtQuesReqOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'Get next question for a contest',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
+    querystring: {
+      type: 'object',
+      required: ['contestId', 'currQuesNo'],
+      properties: {
+        contestId: {type: 'string', minLength: 24, maxLength: 24},
+        currQuesNo: {type: 'number', minimum: 0},
       },
     },
     response: {

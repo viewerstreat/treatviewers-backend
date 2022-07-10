@@ -77,8 +77,8 @@ export interface CreateContestRequest {
     topPrize?: string;
     prizeRatio?: string;
     topWinners?: string;
-    startTime?: number;
-    endTime?: number;
+    startTime: number;
+    endTime: number;
   };
 }
 

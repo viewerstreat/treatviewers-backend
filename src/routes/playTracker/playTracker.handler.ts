@@ -18,6 +18,7 @@ export const playTrackerHandler = async (request: InitReq, reply: FastifyReply) 
   const collPlayTracker = request.mongo.db?.collection<PlayTrackerSchema>(COLL_PLAY_TRACKERS);
   const userId = request.user.id;
   const {contestId} = request.query;
+  const currTs = request.getCurrentTimestamp();
   // check if the contestId is valid
   const contest = await collContest?.findOne({_id: new ObjectId(contestId)});
   if (!contest) {
@@ -39,11 +40,16 @@ export const playTrackerHandler = async (request: InitReq, reply: FastifyReply) 
     reply.status(409).send({success: false, message: 'contest is not paid yet'});
     return;
   }
+  // check if endTime is not expired
+  if (contest.endTime < currTs) {
+    reply.status(409).send({success: false, message: 'contest endTime is over already'});
+    return;
+  }
+
   // if the playTracker exists at this point then it must be INIT or PAID status
   // update the status to STARTED and return the updated document
   if (playTrackerResult) {
     // if the status is paid
-    const currTs = request.getCurrentTimestamp();
     const result = await collPlayTracker?.findOneAndUpdate(
       {contestId, userId},
       {
@@ -63,7 +69,6 @@ export const playTrackerHandler = async (request: InitReq, reply: FastifyReply) 
   }
 
   // insert into playTracker if not exists already
-  const currTs = request.getCurrentTimestamp();
   const data: PlayTrackerSchema = {
     userId,
     contestId,

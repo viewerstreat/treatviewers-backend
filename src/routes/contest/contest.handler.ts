@@ -5,10 +5,8 @@ import {ContestSchema} from '../../models/contest';
 import {COLL_CONTESTS} from '../../utils/constants';
 import {CreateContestRequest, GetContestRequest} from './contest.schema';
 
-export const createContestHandler = async (
-  request: FastifyRequest<CreateContestRequest>,
-  reply: FastifyReply,
-) => {
+type CrtCntstFstReq = FastifyRequest<CreateContestRequest>;
+export const createContestHandler = async (request: CrtCntstFstReq, reply: FastifyReply) => {
   const collection = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
   const doc: ContestSchema = {
     title: request.body.title,
