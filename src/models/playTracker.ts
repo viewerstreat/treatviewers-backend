@@ -1,3 +1,5 @@
+import {Option} from './question';
+
 export enum PLAY_STATUS {
   INIT = 'INIT',
   PAID = 'PAID',
@@ -8,10 +10,7 @@ export enum PLAY_STATUS {
 export interface Answer {
   questionNo: number;
   questionText: string;
-  options: {
-    optionId: number;
-    optionText: string;
-  }[];
+  options: Option[];
   selectedOptionId: number;
 }
 
@@ -27,6 +26,7 @@ export interface PlayTrackerSchema {
   finishTs?: number;
   currQuestionNo?: number;
   totalQuestions?: number;
+  totalAnswered?: number;
   answers?: Answer[];
   score?: number;
   createdTs?: number;

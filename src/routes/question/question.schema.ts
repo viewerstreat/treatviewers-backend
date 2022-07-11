@@ -61,7 +61,31 @@ export const GetQuestionRequestOpts: RouteShorthandOptions = {
         type: 'object',
         properties: {
           success: {type: 'boolean'},
-          data: questionTypeObject,
+          data: {
+            type: 'object',
+            properties: {
+              contestId: {type: 'string'},
+              questionNo: {type: 'number'},
+              questionText: {type: 'string'},
+              options: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    optionId: {type: 'number'},
+                    optionText: {type: 'string'},
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      404: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
         },
       },
     },
@@ -101,7 +125,31 @@ export const GetNxtQuesReqOpts: RouteShorthandOptions = {
         type: 'object',
         properties: {
           success: {type: 'boolean'},
-          data: questionTypeObject,
+          data: {
+            type: 'object',
+            properties: {
+              contestId: {type: 'string'},
+              questionNo: {type: 'number'},
+              questionText: {type: 'string'},
+              options: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    optionId: {type: 'number'},
+                    optionText: {type: 'string'},
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      404: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
         },
       },
     },
@@ -136,7 +184,7 @@ export const CreateQuestionRequestOpts: RouteShorthandOptions = {
         type: 'object',
         properties: {
           success: {type: 'boolean'},
-          data: questionTypeObject,
+          message: {type: 'string'},
         },
       },
       400: {

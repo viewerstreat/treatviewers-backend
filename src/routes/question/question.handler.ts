@@ -50,7 +50,7 @@ export const createQuestionHandler = async (request: CrtQsFstReq, reply: Fastify
   // increase the question count in contest
   await collContest?.updateOne(findBy, {$inc: {questionCount: 1}});
   // return success response
-  return {success: true, data: doc};
+  return {success: true, message: 'Inserted successfully'};
 };
 
 type GetQsFstReq = FastifyRequest<GetQuestionRequest>;
