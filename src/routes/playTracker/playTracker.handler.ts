@@ -33,6 +33,11 @@ export const playTrackerHandler = async (request: InitReq, reply: FastifyReply) 
   if (playTrackerResult && playTrackerResult.status === PLAY_STATUS.FINISHED) {
     return {success: true, data: playTrackerResult};
   }
+  // check if startTime is greater than current timestamp then return error
+  if (contest.startTime > currTs) {
+    reply.status(409).send({success: false, message: 'contest endTime is over already'});
+    return;
+  }
   // check if endTime is not expired
   if (contest.endTime < currTs) {
     reply.status(409).send({success: false, message: 'contest endTime is over already'});
@@ -62,6 +67,7 @@ export const playTrackerHandler = async (request: InitReq, reply: FastifyReply) 
           currQuestionNo: 0,
           totalQuestions: contest.questionCount || 0,
           answers: [],
+          totalAnswered: 0,
           updatedTs: currTs,
         },
       },

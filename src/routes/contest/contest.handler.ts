@@ -1,25 +1,64 @@
 import {ObjectId} from '@fastify/mongodb';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {Filter, Sort} from 'mongodb';
-import {ContestSchema} from '../../models/contest';
-import {COLL_CONTESTS} from '../../utils/constants';
+import {ContestSchema, CONTEST_CATEGORY, PRIZE_SELECTION} from '../../models/contest';
+import {MovieSchema} from '../../models/movie';
+import {COLL_CONTESTS, COLL_MOVIES} from '../../utils/constants';
 import {CreateContestRequest, GetContestRequest} from './contest.schema';
 
 type CrtCntstFstReq = FastifyRequest<CreateContestRequest>;
 export const createContestHandler = async (request: CrtCntstFstReq, reply: FastifyReply) => {
   const collection = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
+  // movieId must be valid when category is movie
+  const {category, movieId} = request.body;
+  if (category === CONTEST_CATEGORY.MOVIE) {
+    if (!movieId) {
+      reply.status(400).send({success: false, message: 'movieId is required'});
+      return;
+    }
+    const collMovie = request.mongo.db?.collection<MovieSchema>(COLL_MOVIES);
+    const movie = await collMovie?.findOne({_id: new ObjectId(movieId)});
+    if (!movie) {
+      reply.status(400).send({success: false, message: 'movieId must be valid'});
+      return;
+    }
+  }
+  const {
+    prizeSelection,
+    topWinnersCount,
+    prizeRatioNumerator,
+    prizeRatioDenominator,
+    topPrizeValue,
+  } = request.body;
+  // validate prizeSelection
+  if (prizeSelection === PRIZE_SELECTION.TOP_WINNERS && !topWinnersCount) {
+    reply.status(400).send({success: false, message: 'topWinnersCount is required'});
+    return;
+  }
+  if (
+    prizeSelection === PRIZE_SELECTION.RATIO_BASED &&
+    (!prizeRatioNumerator || !prizeRatioDenominator || prizeRatioNumerator < prizeRatioDenominator)
+  ) {
+    reply
+      .status(400)
+      .send({success: false, message: 'prizeRatioNumerator & prizeRatioDenominator invalid'});
+    return;
+  }
+
   const doc: ContestSchema = {
     title: request.body.title,
-    category: request.body.category,
-    movieId: request.body.movieId,
+    category,
+    movieId,
     sponsoredBy: request.body.sponsoredBy,
     sponsoredByLogo: request.body.sponsoredByLogo,
     bannerImageUrl: request.body.bannerImageUrl,
     videoUrl: request.body.videoUrl,
     entryFee: request.body.entryFee,
-    topPrize: request.body.topPrize,
-    prizeRatio: request.body.prizeRatio,
-    topWinners: request.body.topWinners,
+    topPrizeValue,
+    prizeSelection,
+    topWinnersCount,
+    prizeRatioNumerator,
+    prizeRatioDenominator,
     startTime: request.body.startTime,
     endTime: request.body.endTime,
     questionCount: 0,

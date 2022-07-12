@@ -1,5 +1,5 @@
 import {RouteShorthandOptions} from 'fastify';
-import {CONTEST_CATEGORY} from '../../models/contest';
+import {CONTEST_CATEGORY, PRIZE_SELECTION} from '../../models/contest';
 
 const contestTypeObject = {
   type: 'object',
@@ -15,9 +15,11 @@ const contestTypeObject = {
     entryFee: {type: 'number'},
     viewCount: {type: 'number'},
     likeCount: {type: 'number'},
-    topPrize: {type: 'string', nullable: true},
-    prizeRatio: {type: 'string', nullable: true},
-    topWinners: {type: 'string', nullable: true},
+    prizeSelection: {enum: ['TOP_WINNERS', 'RATIO_BASED']},
+    topWinnersCount: {type: 'number', minimum: 1, nullable: true},
+    prizeRatioNumerator: {type: 'number', minimum: 1, nullable: true},
+    prizeRatioDenominator: {type: 'number', minimum: 1, nullable: true},
+    topPrizeValue: {type: 'number', minimum: 1, nullable: true},
     startTime: {type: 'number'},
     endTime: {type: 'number'},
     questionCount: {type: 'number', nullable: true},
@@ -57,6 +59,13 @@ export const GetContestRequestOpts: RouteShorthandOptions = {
           },
         },
       },
+      404: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
     },
   },
 };
@@ -74,9 +83,11 @@ export interface CreateContestRequest {
     bannerImageUrl?: string;
     videoUrl?: string;
     entryFee: number;
-    topPrize?: string;
-    prizeRatio?: string;
-    topWinners?: string;
+    prizeSelection: PRIZE_SELECTION;
+    topWinnersCount?: number;
+    prizeRatioNumerator?: number;
+    prizeRatioDenominator?: number;
+    topPrizeValue?: number;
     startTime: number;
     endTime: number;
   };
@@ -94,19 +105,31 @@ export const CreateContestRequestOpts: RouteShorthandOptions = {
     },
     body: {
       type: 'object',
-      required: ['title', 'category', 'sponsoredBy', 'entryFee', 'startTime', 'endTime'],
+      required: [
+        'title',
+        'category',
+        'sponsoredBy',
+        'bannerImageUrl',
+        'videoUrl',
+        'entryFee',
+        'prizeSelection',
+        'startTime',
+        'endTime',
+      ],
       properties: {
         title: {type: 'string', minLength: 1, maxLength: 100},
-        category: {type: 'string', minLength: 1},
-        movieId: {type: 'string', nullable: true},
+        category: {enum: ['movie', 'others']},
+        movieId: {type: 'string', minLength: 24, maxLength: 24, nullable: true},
         sponsoredBy: {type: 'string', minLength: 1},
         sponsoredByLogo: {type: 'string'},
         bannerImageUrl: {type: 'string', format: 'uri'},
         videoUrl: {type: 'string', format: 'uri'},
         entryFee: {type: 'number', minimum: 0},
-        topPrize: {type: 'string'},
-        prizeRatio: {type: 'string'},
-        topWinners: {type: 'string'},
+        prizeSelection: {enum: ['TOP_WINNERS', 'RATIO_BASED']},
+        topWinnersCount: {type: 'number', minimum: 1, nullable: true},
+        prizeRatioNumerator: {type: 'number', minimum: 1, nullable: true},
+        prizeRatioDenominator: {type: 'number', minimum: 1, nullable: true},
+        topPrizeValue: {type: 'number', minimum: 1, nullable: true},
         startTime: {type: 'number', minimum: 1},
         endTime: {type: 'number', minimum: 1},
       },
@@ -117,6 +140,13 @@ export const CreateContestRequestOpts: RouteShorthandOptions = {
         properties: {
           success: {type: 'boolean'},
           data: contestTypeObject,
+        },
+      },
+      400: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
         },
       },
     },

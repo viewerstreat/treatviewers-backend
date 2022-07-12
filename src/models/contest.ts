@@ -5,6 +5,11 @@ export enum CONTEST_CATEGORY {
   OTHERS = 'others',
 }
 
+export enum PRIZE_SELECTION {
+  TOP_WINNERS = 'TOP_WINNERS',
+  RATIO_BASED = 'RATIO_BASED',
+}
+
 export interface ContestSchema {
   _id?: string | ObjectId;
   title?: string;
@@ -15,9 +20,11 @@ export interface ContestSchema {
   bannerImageUrl?: string;
   videoUrl?: string;
   entryFee?: number;
-  topPrize?: string;
-  prizeRatio?: string;
-  topWinners?: string;
+  prizeSelection?: PRIZE_SELECTION;
+  topWinnersCount?: number; // winners count if the prize selection is based on TOP_WINNERS basis
+  prizeRatioNumerator?: number; // prize ratio numerator value
+  prizeRatioDenominator?: number; // prize ratio denominator value
+  topPrizeValue?: number; // value of the top Prize that can be won
   startTime: number;
   endTime: number;
   questionCount?: number;
