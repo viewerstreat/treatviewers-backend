@@ -10,6 +10,13 @@ export enum PRIZE_SELECTION {
   RATIO_BASED = 'RATIO_BASED',
 }
 
+export enum CONTEST_STATUS {
+  CREATED = 'CREATED',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  FINISHED = 'FINISHED',
+}
+
 export interface ContestSchema {
   _id?: string | ObjectId;
   title?: string;
@@ -30,7 +37,7 @@ export interface ContestSchema {
   questionCount?: number;
   viewCount?: number;
   likeCount?: number;
-  isActive?: boolean;
+  status: CONTEST_STATUS;
   createdBy?: number;
   updatedBy?: number;
   createdTs?: number;

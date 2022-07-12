@@ -1,6 +1,13 @@
 import {FastifyPluginAsync} from 'fastify';
-import {createContestHandler, getContestHandler} from './contest.handler';
 import {
+  activateHandler,
+  createContestHandler,
+  getContestHandler,
+  inActivateHandler,
+} from './contest.handler';
+import {
+  ActivateReqOpts,
+  ActivateRequest,
   CreateContestRequest,
   CreateContestRequestOpts,
   GetContestRequest,
@@ -13,6 +20,12 @@ const contestRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> =>
 
   // get contest
   fastify.get<GetContestRequest>('/', GetContestRequestOpts, getContestHandler);
+
+  // make contest active
+  fastify.post<ActivateRequest>('/activate', ActivateReqOpts, activateHandler);
+
+  // make contest inactive
+  fastify.post<ActivateRequest>('/inActivate', ActivateReqOpts, inActivateHandler);
 };
 
 export default contestRoute;

@@ -23,7 +23,7 @@ const contestTypeObject = {
     startTime: {type: 'number'},
     endTime: {type: 'number'},
     questionCount: {type: 'number', nullable: true},
-    isActive: {type: 'boolean'},
+    status: {type: 'string'},
   },
 };
 
@@ -143,6 +143,51 @@ export const CreateContestRequestOpts: RouteShorthandOptions = {
         },
       },
       400: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
+    },
+  },
+};
+
+export interface ActivateRequest {
+  Headers: {
+    authorization: string;
+  };
+  Body: {
+    contestId: string;
+  };
+}
+
+export const ActivateReqOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'API to activate contest',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
+    body: {
+      type: 'object',
+      required: ['contestId'],
+      properties: {
+        contestId: {type: 'string', minLength: 24, maxLength: 24},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
+      404: {
         type: 'object',
         properties: {
           success: {type: 'boolean'},

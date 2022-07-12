@@ -1,7 +1,7 @@
 import {ObjectId} from '@fastify/mongodb';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {Filter, ReadPreference, TransactionOptions, UpdateFilter} from 'mongodb';
-import {ContestSchema} from '../../models/contest';
+import {ContestSchema, CONTEST_STATUS} from '../../models/contest';
 import {PlayTrackerSchema, PLAY_STATUS} from '../../models/playTracker';
 import {
   TRANSACTION_STATUS,
@@ -201,7 +201,7 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
   // check if the contestId is valid
   const filter: Filter<ContestSchema> = {
     _id: new ObjectId(contestId),
-    isActive: true,
+    status: CONTEST_STATUS.ACTIVE,
     endTime: {$gt: request.getCurrentTimestamp()},
   };
   const contest = await collContest?.findOne(filter);

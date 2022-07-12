@@ -1,10 +1,15 @@
 import {ObjectId} from '@fastify/mongodb';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {Filter, Sort} from 'mongodb';
-import {ContestSchema, CONTEST_CATEGORY, PRIZE_SELECTION} from '../../models/contest';
+import {
+  ContestSchema,
+  CONTEST_CATEGORY,
+  CONTEST_STATUS,
+  PRIZE_SELECTION,
+} from '../../models/contest';
 import {MovieSchema} from '../../models/movie';
 import {COLL_CONTESTS, COLL_MOVIES} from '../../utils/constants';
-import {CreateContestRequest, GetContestRequest} from './contest.schema';
+import {ActivateRequest, CreateContestRequest, GetContestRequest} from './contest.schema';
 
 type CrtCntstFstReq = FastifyRequest<CreateContestRequest>;
 export const createContestHandler = async (request: CrtCntstFstReq, reply: FastifyReply) => {
@@ -17,7 +22,7 @@ export const createContestHandler = async (request: CrtCntstFstReq, reply: Fasti
       return;
     }
     const collMovie = request.mongo.db?.collection<MovieSchema>(COLL_MOVIES);
-    const movie = await collMovie?.findOne({_id: new ObjectId(movieId)});
+    const movie = await collMovie?.findOne({_id: new ObjectId(movieId), isActive: true});
     if (!movie) {
       reply.status(400).send({success: false, message: 'movieId must be valid'});
       return;
@@ -29,6 +34,8 @@ export const createContestHandler = async (request: CrtCntstFstReq, reply: Fasti
     prizeRatioNumerator,
     prizeRatioDenominator,
     topPrizeValue,
+    startTime,
+    endTime,
   } = request.body;
   // validate prizeSelection
   if (prizeSelection === PRIZE_SELECTION.TOP_WINNERS && !topWinnersCount) {
@@ -42,6 +49,10 @@ export const createContestHandler = async (request: CrtCntstFstReq, reply: Fasti
     reply
       .status(400)
       .send({success: false, message: 'prizeRatioNumerator & prizeRatioDenominator invalid'});
+    return;
+  }
+  if (endTime <= startTime) {
+    reply.status(400).send({success: false, message: 'startTime and endTime are invalid'});
     return;
   }
 
@@ -59,12 +70,12 @@ export const createContestHandler = async (request: CrtCntstFstReq, reply: Fasti
     topWinnersCount,
     prizeRatioNumerator,
     prizeRatioDenominator,
-    startTime: request.body.startTime,
-    endTime: request.body.endTime,
+    startTime,
+    endTime,
     questionCount: 0,
     viewCount: 0,
     likeCount: 0,
-    isActive: true,
+    status: CONTEST_STATUS.CREATED,
     createdBy: request.user.id,
     createdTs: request.getCurrentTimestamp(),
   };
@@ -81,7 +92,7 @@ export const getContestHandler = async (
   reply: FastifyReply,
 ) => {
   // generate the findBy query
-  const findBy: Filter<ContestSchema> = {isActive: true};
+  const findBy: Filter<ContestSchema> = {};
   // filter by _id if it is passed in the query parameters
   if (request.query._id) {
     findBy._id = new ObjectId(request.query._id);
@@ -89,6 +100,7 @@ export const getContestHandler = async (
   // filter by movieId is it is passed in the query parameters
   if (request.query.movieId) {
     findBy.movieId = request.query.movieId;
+    findBy.status = CONTEST_STATUS.ACTIVE;
   }
   const sortBy: Sort = {_id: -1};
   const pageNo = request.query.pageIndex || 0;
@@ -101,4 +113,51 @@ export const getContestHandler = async (
     .sort(sortBy)
     .toArray();
   return {success: true, data: result};
+};
+
+// handler function to update contest status active
+type ActCntstFstReq = FastifyRequest<ActivateRequest>;
+export const activateHandler = async (request: ActCntstFstReq, reply: FastifyReply) => {
+  const filter: Filter<ContestSchema> = {
+    _id: new ObjectId(request.body.contestId),
+    status: {$in: [CONTEST_STATUS.CREATED, CONTEST_STATUS.INACTIVE]},
+    endTime: {$lt: request.getCurrentTimestamp()},
+    questionCount: {$gt: 0},
+  };
+  const coll = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
+  const result = await coll?.updateOne(filter, {
+    $set: {
+      status: CONTEST_STATUS.ACTIVE,
+      updatedBy: request.user.id,
+      updatedTs: request.getCurrentTimestamp(),
+    },
+  });
+  if (!result?.matchedCount) {
+    reply
+      .status(404)
+      .send({success: true, message: 'contest do not exists or do not match criteria'});
+    return;
+  }
+  return {success: true, message: 'Updated successfully'};
+};
+
+export const inActivateHandler = async (request: ActCntstFstReq, reply: FastifyReply) => {
+  const filter: Filter<ContestSchema> = {
+    _id: new ObjectId(request.body.contestId),
+    status: {$in: [CONTEST_STATUS.CREATED, CONTEST_STATUS.ACTIVE]},
+    startTime: {$lt: request.getCurrentTimestamp()},
+  };
+  const coll = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
+  const result = await coll?.updateOne(filter, {
+    $set: {
+      status: CONTEST_STATUS.INACTIVE,
+      updatedBy: request.user.id,
+      updatedTs: request.getCurrentTimestamp(),
+    },
+  });
+  if (!result?.matchedCount) {
+    reply.status(404).send({success: true, message: 'contest not found'});
+    return;
+  }
+  return {success: true, message: 'Updated successfully'};
 };

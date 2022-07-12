@@ -1,7 +1,7 @@
 import {ObjectId} from '@fastify/mongodb';
 import {Filter} from 'mongodb';
 import {FastifyReply, FastifyRequest} from 'fastify';
-import {ContestSchema} from '../../models/contest';
+import {ContestSchema, CONTEST_STATUS} from '../../models/contest';
 import {Answer, PlayTrackerSchema, PLAY_STATUS} from '../../models/playTracker';
 import {COLL_CONTESTS, COLL_PLAY_TRACKERS, COLL_QUESTIONS} from '../../utils/constants';
 import {AnswerRequest, FinishRequest, PlayTrackerInitReq} from './playTracker.schema';
@@ -32,6 +32,11 @@ export const playTrackerHandler = async (request: InitReq, reply: FastifyReply) 
   // if the status is finished then return success response
   if (playTrackerResult && playTrackerResult.status === PLAY_STATUS.FINISHED) {
     return {success: true, data: playTrackerResult};
+  }
+  // check if contest is active
+  if (contest.status !== CONTEST_STATUS.ACTIVE) {
+    reply.status(409).send({success: false, message: 'contest status is not active'});
+    return;
   }
   // check if startTime is greater than current timestamp then return error
   if (contest.startTime > currTs) {
