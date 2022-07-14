@@ -5,6 +5,7 @@ export enum PLAY_STATUS {
   PAID = 'PAID',
   STARTED = 'STARTED',
   FINISHED = 'FINISHED',
+  ENDED = 'ENDED',
 }
 
 export interface Answer {
@@ -27,8 +28,15 @@ export interface PlayTrackerSchema {
   currQuestionNo?: number;
   totalQuestions?: number;
   totalAnswered?: number;
-  answers?: Answer[];
+  timeTaken?: number;
   score?: number;
+  rank?: number;
+  answers?: Answer[];
   createdTs?: number;
   updatedTs?: number;
+}
+
+export interface LeaderboardSchema {
+  userId: number;
+  name: string;
 }

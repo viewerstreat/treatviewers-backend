@@ -1,6 +1,6 @@
 import {ObjectId} from '@fastify/mongodb';
 import {FastifyReply, FastifyRequest} from 'fastify';
-import {Filter, ReadPreference, TransactionOptions, UpdateFilter} from 'mongodb';
+import {Filter, UpdateFilter} from 'mongodb';
 import {ContestSchema, CONTEST_STATUS} from '../../models/contest';
 import {PlayTrackerSchema, PLAY_STATUS} from '../../models/playTracker';
 import {
@@ -9,6 +9,7 @@ import {
   WalletTransactionSchema,
   WALLET_TRANSACTION_TYPE,
 } from '../../models/wallet';
+import {TRANSACTION_OPTS} from '../../utils/config';
 import {
   COLL_CONTESTS,
   COLL_PLAY_TRACKERS,
@@ -115,11 +116,6 @@ export const addBalEndHandler = async (request: AddBalEndFastifyReq, reply: Fast
   }
   // start session for mongo transaction
   const session = request.mongo.client.startSession();
-  const transOpts: TransactionOptions = {
-    readPreference: ReadPreference.primary,
-    readConcern: {level: 'local'},
-    writeConcern: {w: 'majority'},
-  };
   let isError = false;
   let errorMessage = '';
   let transactionResult = undefined;
@@ -151,7 +147,7 @@ export const addBalEndHandler = async (request: AddBalEndFastifyReq, reply: Fast
       if (modifiedCount === 0) {
         throw new Error('Not able to update transaction');
       }
-    }, transOpts);
+    }, TRANSACTION_OPTS);
   } catch (err: any) {
     transactionResult = undefined;
     isError = true;
@@ -235,11 +231,6 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
   }
   // start a session
   const session = request.mongo.client.startSession();
-  const transOpts: TransactionOptions = {
-    readPreference: ReadPreference.primary,
-    readConcern: {level: 'local'},
-    writeConcern: {w: 'majority'},
-  };
   const updatedTs = request.getCurrentTimestamp();
   const entryFee = contest.entryFee || 0;
   try {
@@ -304,7 +295,7 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
       if (modifiedCount !== 1) {
         throw new Error('not able to update playTracker');
       }
-    }, transOpts);
+    }, TRANSACTION_OPTS);
     if (!transactionResult) {
       reply.status(409).send({success: false, message: 'Unknown error occurred'});
       return;

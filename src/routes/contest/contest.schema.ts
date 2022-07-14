@@ -19,7 +19,7 @@ const contestTypeObject = {
     topWinnersCount: {type: 'number', minimum: 1, nullable: true},
     prizeRatioNumerator: {type: 'number', minimum: 1, nullable: true},
     prizeRatioDenominator: {type: 'number', minimum: 1, nullable: true},
-    topPrizeValue: {type: 'number', minimum: 1, nullable: true},
+    prizeValue: {type: 'number', minimum: 1, nullable: true},
     startTime: {type: 'number'},
     endTime: {type: 'number'},
     questionCount: {type: 'number', nullable: true},
@@ -87,7 +87,7 @@ export interface CreateContestRequest {
     topWinnersCount?: number;
     prizeRatioNumerator?: number;
     prizeRatioDenominator?: number;
-    topPrizeValue?: number;
+    prizeValue?: number;
     startTime: number;
     endTime: number;
   };
@@ -113,6 +113,7 @@ export const CreateContestRequestOpts: RouteShorthandOptions = {
         'videoUrl',
         'entryFee',
         'prizeSelection',
+        'prizeValue',
         'startTime',
         'endTime',
       ],
@@ -129,7 +130,7 @@ export const CreateContestRequestOpts: RouteShorthandOptions = {
         topWinnersCount: {type: 'number', minimum: 1, nullable: true},
         prizeRatioNumerator: {type: 'number', minimum: 1, nullable: true},
         prizeRatioDenominator: {type: 'number', minimum: 1, nullable: true},
-        topPrizeValue: {type: 'number', minimum: 1, nullable: true},
+        prizeValue: {type: 'number', minimum: 1},
         startTime: {type: 'number', minimum: 1},
         endTime: {type: 'number', minimum: 1},
       },

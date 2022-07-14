@@ -8,6 +8,9 @@ export interface UserSchema {
   hasUsedReferralCode?: boolean;
   referralCode?: string;
   referredBy?: string;
+  totalPlayed?: number;
+  contestWon?: number;
+  totalEarning?: number;
   createdTs?: number;
   updatedTs?: number;
 }

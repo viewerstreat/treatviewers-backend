@@ -64,6 +64,9 @@ export const createUserHandler = async (
     email,
     profilePic: request.body.profilePic || '',
     isActive: true,
+    totalPlayed: 0,
+    totalEarning: 0,
+    contestWon: 0,
     createdTs: request.getCurrentTimestamp(),
   };
   // insert into the databse

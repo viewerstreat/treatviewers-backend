@@ -1,4 +1,5 @@
 import {SwaggerOptions} from '@fastify/swagger';
+import {TransactionOptions, ReadPreference} from 'mongodb';
 
 export const RELATIVE_DIST_STATIC_FOLDER = '../public';
 export const SWAGGER_CONFIG_OPTS: SwaggerOptions = {
@@ -13,6 +14,13 @@ export const SWAGGER_CONFIG_OPTS: SwaggerOptions = {
     },
     schemes: ['https', 'http'],
   },
+};
+
+// transaction options for mongo transaction
+export const TRANSACTION_OPTS: TransactionOptions = {
+  readPreference: ReadPreference.primary,
+  readConcern: {level: 'local'},
+  writeConcern: {w: 'majority'},
 };
 
 // route prefix for APIs
@@ -38,6 +46,9 @@ export const AWS_REGION = 'ap-south-1';
 
 // AWS S3 bucket name
 export const AWS_BUCKET = 'trailsbuddy-1';
+
+// scheduler job interval in second
+export const SCHEDULER_INTERVAL = 30;
 
 interface RouteName {
   method: 'GET' | 'POST';

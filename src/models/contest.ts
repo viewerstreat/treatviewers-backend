@@ -1,4 +1,5 @@
 import {ObjectId} from '@fastify/mongodb';
+import {PlayTrackerSchema} from './playTracker';
 
 export enum CONTEST_CATEGORY {
   MOVIE = 'movie',
@@ -15,6 +16,7 @@ export enum CONTEST_STATUS {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
   FINISHED = 'FINISHED',
+  ENDED = 'ENDED',
 }
 
 export interface ContestSchema {
@@ -31,13 +33,15 @@ export interface ContestSchema {
   topWinnersCount?: number; // winners count if the prize selection is based on TOP_WINNERS basis
   prizeRatioNumerator?: number; // prize ratio numerator value
   prizeRatioDenominator?: number; // prize ratio denominator value
-  topPrizeValue?: number; // value of the top Prize that can be won
+  prizeValue?: number; // value of the top Prize that can be won
   startTime: number;
   endTime: number;
   questionCount?: number;
   viewCount?: number;
   likeCount?: number;
   status: CONTEST_STATUS;
+  winners?: PlayTrackerSchema[];
+  allPlayTrackers?: PlayTrackerSchema[];
   createdBy?: number;
   updatedBy?: number;
   createdTs?: number;
