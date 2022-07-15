@@ -79,7 +79,12 @@ const getMovieViewCount = async (movieId: string, request: FastifyRequest): Prom
 
 const getMovieLikeCount = async (movieId: string, request: FastifyRequest): Promise<number> => {
   const coll = request.mongo.db?.collection<FavouriteSchema>(COLL_FAVOURITES);
-  const count = await coll?.countDocuments({mediaId: movieId, mediaType: MEDIA_TYPE.MOVIE});
+  const filter: Filter<FavouriteSchema> = {
+    mediaId: movieId,
+    mediaType: MEDIA_TYPE.MOVIE,
+    isRemoved: false,
+  };
+  const count = await coll?.countDocuments(filter);
   return count || 0;
 };
 
@@ -89,6 +94,7 @@ export const isLikedByMeHandler = async (request: FastifyRequest<IsLikeByMeReque
     mediaId: request.query.movieId,
     userId: request.user.id,
     mediaType: MEDIA_TYPE.MOVIE,
+    isRemoved: false,
   });
   return {success: true, isLikedByMe: !!res};
 };

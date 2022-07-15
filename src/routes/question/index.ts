@@ -10,10 +10,10 @@ import {
 } from './question.schema';
 
 const quesRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  // create contest
+  // create question
   fastify.post<CreateQuestionRequest>('/', CreateQuestionRequestOpts, createQuestionHandler);
 
-  // get contest
+  // get question
   fastify.get<GetQuestionRequest>('/', GetQuestionRequestOpts, getQuestionHandler);
 
   // get next question for a contest

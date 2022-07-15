@@ -33,7 +33,7 @@ export const createContestHandler = async (request: CrtCntstFstReq, reply: Fasti
     topWinnersCount,
     prizeRatioNumerator,
     prizeRatioDenominator,
-    topPrizeValue,
+    prizeValue,
     startTime,
     endTime,
   } = request.body;
@@ -65,7 +65,7 @@ export const createContestHandler = async (request: CrtCntstFstReq, reply: Fasti
     bannerImageUrl: request.body.bannerImageUrl,
     videoUrl: request.body.videoUrl,
     entryFee: request.body.entryFee,
-    topPrizeValue,
+    prizeValue,
     prizeSelection,
     topWinnersCount,
     prizeRatioNumerator,
@@ -102,6 +102,11 @@ export const getContestHandler = async (
     findBy.movieId = request.query.movieId;
     findBy.status = CONTEST_STATUS.ACTIVE;
   }
+  // filter by category
+  if (request.query.category) {
+    findBy.category = request.query.category;
+    findBy.status = CONTEST_STATUS.ACTIVE;
+  }
   const sortBy: Sort = {_id: -1};
   const pageNo = request.query.pageIndex || 0;
   const pageSize = request.query.pageSize || request.getDefaultPageSize();
@@ -121,7 +126,7 @@ export const activateHandler = async (request: ActCntstFstReq, reply: FastifyRep
   const filter: Filter<ContestSchema> = {
     _id: new ObjectId(request.body.contestId),
     status: {$in: [CONTEST_STATUS.CREATED, CONTEST_STATUS.INACTIVE]},
-    endTime: {$lt: request.getCurrentTimestamp()},
+    endTime: {$gt: request.getCurrentTimestamp()},
     questionCount: {$gt: 0},
   };
   const coll = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
@@ -145,7 +150,7 @@ export const inActivateHandler = async (request: ActCntstFstReq, reply: FastifyR
   const filter: Filter<ContestSchema> = {
     _id: new ObjectId(request.body.contestId),
     status: {$in: [CONTEST_STATUS.CREATED, CONTEST_STATUS.ACTIVE]},
-    startTime: {$lt: request.getCurrentTimestamp()},
+    startTime: {$gt: request.getCurrentTimestamp()},
   };
   const coll = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
   const result = await coll?.updateOne(filter, {
@@ -156,7 +161,7 @@ export const inActivateHandler = async (request: ActCntstFstReq, reply: FastifyR
     },
   });
   if (!result?.matchedCount) {
-    reply.status(404).send({success: true, message: 'contest not found'});
+    reply.status(404).send({success: true, message: 'contest not found or criteria not met'});
     return;
   }
   return {success: true, message: 'Updated successfully'};

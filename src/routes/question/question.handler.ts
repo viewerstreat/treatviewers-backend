@@ -1,7 +1,7 @@
 import {ObjectId} from '@fastify/mongodb';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {Filter, Sort} from 'mongodb';
-import {ContestSchema} from '../../models/contest';
+import {ContestSchema, CONTEST_STATUS} from '../../models/contest';
 import {QuestionSchema} from '../../models/question';
 import {COLL_CONTESTS, COLL_QUESTIONS} from '../../utils/constants';
 import {CreateQuestionRequest, GetNxtQuesReq, GetQuestionRequest} from './question.schema';
@@ -28,7 +28,10 @@ export const createQuestionHandler = async (request: CrtQsFstReq, reply: Fastify
   // first validate whether valid contestId
   const collContest = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
   const collQues = request.mongo.db?.collection<QuestionSchema>(COLL_QUESTIONS);
-  const findBy = {_id: new ObjectId(contestId), isActive: true};
+  const findBy: Filter<ContestSchema> = {
+    _id: new ObjectId(contestId),
+    status: CONTEST_STATUS.CREATED,
+  };
   const constest = await collContest?.findOne(findBy);
   if (!constest) {
     reply
@@ -48,7 +51,8 @@ export const createQuestionHandler = async (request: CrtQsFstReq, reply: Fastify
   await collQues?.insertOne(doc);
 
   // increase the question count in contest
-  await collContest?.updateOne(findBy, {$inc: {questionCount: 1}});
+  const updatedTs = request.getCurrentTimestamp();
+  await collContest?.updateOne(findBy, {$inc: {questionCount: 1}, $set: {updatedTs}});
   // return success response
   return {success: true, message: 'Inserted successfully'};
 };

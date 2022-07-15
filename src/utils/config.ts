@@ -48,7 +48,7 @@ export const AWS_REGION = 'ap-south-1';
 export const AWS_BUCKET = 'trailsbuddy-1';
 
 // scheduler job interval in second
-export const SCHEDULER_INTERVAL = 30;
+export const SCHEDULER_INTERVAL = 300;
 
 interface RouteName {
   method: 'GET' | 'POST';

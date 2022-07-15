@@ -31,6 +31,7 @@ export interface GetContestRequest {
   Querystring: {
     _id?: string;
     movieId?: string;
+    category?: CONTEST_CATEGORY;
     pageSize?: number;
     pageIndex?: number;
   };
@@ -38,12 +39,13 @@ export interface GetContestRequest {
 
 export const GetContestRequestOpts: RouteShorthandOptions = {
   schema: {
-    description: 'get the contest list. filter can be applied by `_id` and `movieId`. ',
+    description: 'get the contest list. filter can be applied by `_id`,`movieId` & `category`. ',
     querystring: {
       type: 'object',
       properties: {
         _id: {type: 'string', minLength: 24, maxLength: 24},
         movieId: {type: 'string', minLength: 24, maxLength: 24},
+        category: {enum: ['movie', 'others']},
         pageSize: {type: 'number'},
         pageIndex: {type: 'number'},
       },
@@ -122,7 +124,7 @@ export const CreateContestRequestOpts: RouteShorthandOptions = {
         category: {enum: ['movie', 'others']},
         movieId: {type: 'string', minLength: 24, maxLength: 24, nullable: true},
         sponsoredBy: {type: 'string', minLength: 1},
-        sponsoredByLogo: {type: 'string'},
+        sponsoredByLogo: {type: 'string', format: 'uri'},
         bannerImageUrl: {type: 'string', format: 'uri'},
         videoUrl: {type: 'string', format: 'uri'},
         entryFee: {type: 'number', minimum: 0},
