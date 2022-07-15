@@ -40,7 +40,7 @@ export const playTrackerHandler = async (request: InitReq, reply: FastifyReply) 
   }
   // check if startTime is greater than current timestamp then return error
   if (contest.startTime > currTs) {
-    reply.status(409).send({success: false, message: 'contest endTime is over already'});
+    reply.status(409).send({success: false, message: 'contest has not started yet'});
     return;
   }
   // check if endTime is not expired
@@ -146,6 +146,12 @@ export const answerHandler = async (request: AnsFstReq, reply: FastifyReply) => 
   // check if endTime is not expired
   if (contest.endTime < currTs) {
     reply.status(409).send({success: false, message: 'contest endTime is over already'});
+    return;
+  }
+  // questionNo and currQuestionNo from playTracker should match
+  const currQuestionNo = playTracker.currQuestionNo || 0;
+  if (request.body.questionNo !== currQuestionNo + 1) {
+    reply.status(409).send({success: false, message: `currQuestionNo is ${currQuestionNo}`});
     return;
   }
   // get the correct option for the question

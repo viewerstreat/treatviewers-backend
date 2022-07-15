@@ -1,4 +1,6 @@
 import {FastifyPluginAsync} from 'fastify';
+import {getNxtQuesHandler} from '../question/question.handler';
+import {GetNxtQuesReq, GetNxtQuesReqOpts} from '../question/question.schema';
 import {answerHandler, finishHandler, playTrackerHandler} from './playTracker.handler';
 import {
   PlayTrackerOpts,
@@ -12,6 +14,9 @@ import {
 const playTrackerRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   // get playTracker
   fastify.get<PlayTrackerInitReq>('/', PlayTrackerOpts, playTrackerHandler);
+
+  // get next question
+  fastify.get<GetNxtQuesReq>('/getNextQues', GetNxtQuesReqOpts, getNxtQuesHandler);
 
   // post answer
   fastify.post<AnswerRequest>('/answer', AnswerReqOpts, answerHandler);

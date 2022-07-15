@@ -2,8 +2,9 @@ import {ObjectId} from '@fastify/mongodb';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {Filter, Sort} from 'mongodb';
 import {ContestSchema, CONTEST_STATUS} from '../../models/contest';
+import {PlayTrackerSchema} from '../../models/playTracker';
 import {QuestionSchema} from '../../models/question';
-import {COLL_CONTESTS, COLL_QUESTIONS} from '../../utils/constants';
+import {COLL_CONTESTS, COLL_PLAY_TRACKERS, COLL_QUESTIONS} from '../../utils/constants';
 import {CreateQuestionRequest, GetNxtQuesReq, GetQuestionRequest} from './question.schema';
 
 type CrtQsFstReq = FastifyRequest<CreateQuestionRequest>;
@@ -78,10 +79,19 @@ export const getQuestionHandler = async (request: GetQsFstReq, reply: FastifyRep
 
 type GetNxtQFstReq = FastifyRequest<GetNxtQuesReq>;
 export const getNxtQuesHandler = async (request: GetNxtQFstReq, reply: FastifyReply) => {
+  const collPT = request.mongo.db?.collection<PlayTrackerSchema>(COLL_PLAY_TRACKERS);
+  const playTrackers = await collPT?.findOne({
+    contestId: request.query.contestId,
+    userId: request.user.id,
+  });
+  if (!playTrackers) {
+    reply.status(404).send({success: true, message: 'Play Tracker not found'});
+    return;
+  }
   // generate the findBy query
   const findBy: Filter<QuestionSchema> = {
     contestId: request.query.contestId,
-    questionNo: {$gt: Number(request.query.currQuesNo)},
+    questionNo: {$gt: playTrackers.currQuestionNo},
     isActive: true,
   };
   const sortBy: Sort = {questionNo: 1};

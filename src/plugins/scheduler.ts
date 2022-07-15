@@ -27,14 +27,17 @@ const FETCH_LIMIT = 10;
 
 // sort playTrackers based on score, timeTaken and start time
 const sortPlayTracker = (e1: PlayTrackerSchema, e2: PlayTrackerSchema): 1 | -1 | 0 => {
+  // score descending sort
   const score1 = e1.score || 0;
   const score2 = e2.score || 0;
   if (score1 < score2) return 1;
   if (score1 > score2) return -1;
+  // timeTaken ascending sort
   const timeTaken1 = e1.timeTaken || 0;
   const timeTaken2 = e2.timeTaken || 0;
   if (timeTaken1 < timeTaken2) return -1;
   if (timeTaken1 > timeTaken2) return 1;
+  // start time ascending sort
   const start1 = e1.startTs || 0;
   const start2 = e1.startTs || 0;
   if (start1 < start2) return -1;
@@ -42,6 +45,9 @@ const sortPlayTracker = (e1: PlayTrackerSchema, e2: PlayTrackerSchema): 1 | -1 |
   return 0;
 };
 
+// get total number of winners of the contest based on prize selection strategy
+// if prize selection strategy is ratio based then total count is calculated based
+// on the numerator and denominator value
 const getWinnerCount = (contest: ContestSchema, totalPlayer: number): number => {
   if (contest.prizeSelection === PRIZE_SELECTION.TOP_WINNERS) {
     return contest.topWinnersCount || 0;
@@ -53,6 +59,12 @@ const getWinnerCount = (contest: ContestSchema, totalPlayer: number): number => 
 };
 
 async function finishContest(contest: ContestSchema, fastify: FastifyInstance) {
+  {
+    // log some info for debugging purposes
+    const message = `Executing finish contest for Id: ${contest._id}, title: ${contest.title}`;
+    fastify.log.info(message);
+  }
+  // start a mongo session
   const session = fastify.mongo.client.startSession();
   const collContest = fastify.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
   const collPT = fastify.mongo.db?.collection<PlayTrackerSchema>(COLL_PLAY_TRACKERS);
@@ -74,6 +86,7 @@ async function finishContest(contest: ContestSchema, fastify: FastifyInstance) {
       const msg = `Not able to update the balance for user: ${userId}, prizeValue: ${prizeValue}`;
       throw new Error(msg);
     }
+    // get balanceBefore value
     const balanceBefore = res?.value?.balance || 0;
     const remarks = `Credit prize value ${prizeValue}`;
     // insert into walletTransaction collection
@@ -98,7 +111,10 @@ async function finishContest(contest: ContestSchema, fastify: FastifyInstance) {
   // withTransaction function
   const withTransactionCallback = async () => {
     // find all playTrackers for the contest
-    const filter: Filter<PlayTrackerSchema> = {contestId: contest._id?.toString()};
+    const filter: Filter<PlayTrackerSchema> = {
+      contestId: contest._id?.toString(),
+      status: {$in: [PLAY_STATUS.PAID, PLAY_STATUS.STARTED, PLAY_STATUS.FINISHED]},
+    };
     const playTrackers = (await collPT?.find(filter).toArray()) || [];
     // populate timeTaken and status = ENDED
     playTrackers?.forEach((e) => {
@@ -143,16 +159,16 @@ async function finishContest(contest: ContestSchema, fastify: FastifyInstance) {
     );
 
     // update totalPlayed
-    const allUsers = playTrackers.map((e) => new ObjectId(e.userId));
+    const allUsers = playTrackers.map((e) => e.userId);
     await collUser?.updateMany(
-      {_id: {$in: allUsers}},
+      {id: {$in: allUsers}},
       {$inc: {totalPlayed: 1}, $set: {updatedTs}},
       {session},
     );
     // update contestWon, totalEarning
-    const allWinners = winners.map((e) => new ObjectId(e.userId));
+    const allWinners = winners.map((e) => e.userId);
     await collUser?.updateMany(
-      {_id: {$in: allWinners}},
+      {id: {$in: allWinners}},
       {$inc: {contestWon: 1, totalEarning: prizeValue}, $set: {updatedTs}},
       {session},
     );
@@ -171,19 +187,26 @@ async function finishContest(contest: ContestSchema, fastify: FastifyInstance) {
 }
 
 export default fp(async (fastify, opts) => {
+  // handler function for the async task
+  // finds all eligible contests
+  // finish all contests
   const taskHandler = async () => {
     fastify.log.info('scheduler taskHandler called...');
     const collContest = fastify.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
+    // fetch contests that are ACTIVE and endTime is already over
     const filter: Filter<ContestSchema> = {
       status: CONTEST_STATUS.ACTIVE,
       endTime: {$lte: fastify.getCurrentTimestamp()},
     };
+    // fetched in updateTs ascending order so that oldest contest updated first
     const sort: Sort = {updatedTs: 1};
     let contests = await collContest?.find(filter).sort(sort).limit(FETCH_LIMIT).toArray();
     contests = contests || [];
+    // finish contest for all eligible contests
     await Promise.all(contests.map((c) => finishContest(c, fastify)));
   };
 
+  // error handler function for the async task
   const errorHandler = (err: Error) => {
     fastify.log.error('Error in scheduler...');
     fastify.log.error(err);

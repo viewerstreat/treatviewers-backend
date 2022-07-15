@@ -98,7 +98,6 @@ export interface GetNxtQuesReq {
   };
   Querystring: {
     contestId: string;
-    currQuesNo: number;
   };
 }
 
@@ -114,10 +113,9 @@ export const GetNxtQuesReqOpts: RouteShorthandOptions = {
     },
     querystring: {
       type: 'object',
-      required: ['contestId', 'currQuesNo'],
+      required: ['contestId'],
       properties: {
         contestId: {type: 'string', minLength: 24, maxLength: 24},
-        currQuesNo: {type: 'number', minimum: 0},
       },
     },
     response: {
