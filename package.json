@@ -37,6 +37,7 @@
     "fastify-cli": "^4.1.1",
     "fastify-plugin": "^3.0.0",
     "fastify-tsconfig": "^1.0.1",
+    "google-auth-library": "^8.1.1",
     "toad-scheduler": "^1.6.1",
     "typescript": "^4.5.4"
   },

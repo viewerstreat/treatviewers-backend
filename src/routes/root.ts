@@ -1,6 +1,7 @@
 import {FastifyPluginAsync} from 'fastify';
 import {OtpSchema, UserSchema} from '../models/user';
 import {COLL_OTPS, COLL_USERS} from '../utils/constants';
+import {OAuth2Client} from 'google-auth-library';
 
 const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get('/ping', async (request, reply) => {
@@ -19,8 +20,24 @@ const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       },
     },
     async (request, reply) => {
-      const token = fastify.generateToken(request.query.userId, request.query.name);
-      return {success: true, token};
+      const clientId = process.env.GOOGLE_TOKEN_CLIENT_ID;
+      const client = new OAuth2Client(clientId);
+      const token =
+        'eyJhbGciOiJSUzI1NiIsImtpZCI6IjYzMWZhZTliNTk0MGEyZDFmYmZmYjAwNDAzZDRjZjgwYTIxYmUwNGUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI1MDUxMzY0NzM0OTktZDFnaWo3cGdyN3JjbTM1Y3AycGYwZDd1YjVldWdsNTYuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI1MDUxMzY0NzM0OTktYnZxMWpvcjg3aWgyaDBnM2NjODZzZzNjNnVkajl0ZWEuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDA5MTA0MDYyOTcyNTYwMDk0ODMiLCJlbWFpbCI6InNpYnUuaXQxM0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6IlNpYmFwcmFzYWQgTWFpdGkiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EtL0FGZFp1Y29saG45b21ZZDk4UE41QVBUOVF0ME1RSV9RYVppeUszMVVmbXg2Znc9czk2LWMiLCJnaXZlbl9uYW1lIjoiU2liYXByYXNhZCIsImZhbWlseV9uYW1lIjoiTWFpdGkiLCJsb2NhbGUiOiJlbiIsImlhdCI6MTY1ODQ2MjE0MCwiZXhwIjoxNjU4NDY1NzQwfQ.sKlEW6aZ5qbt-jdEM7xebI9TOHmiQx6WnJ2FWI2Zg_AWpmVGURgT-APuOYypnQiLRyHej96RxtBhJfK3gc4pCMcndIcE-8pmIIcxu_GF0NnfwoK8XLV60s2fnPHieP9h9kNpk8_kEf3UzhYQil74nnANEGM95JknBR6sjmyBq4MfI-QEA8dzzt8obB7HAyQrrdnfg4rGFJwo5oTpjm2kYuhV6-jmmnE9acxpSrLvtBDWZCwoy27b-hf2si5K6fY6NgZcDMARI1VHk_AiOYIAoMlpVLm4JGgCpKWatUy-e4niTTNLsKVyIn2GpOGyIdTew4YSsdc_kDWM8-lbdwdTtQ';
+      const verify = async () => {
+        const ticket = await client.verifyIdToken({
+          idToken: token,
+          audience: clientId,
+        });
+        const payload = ticket.getPayload();
+        console.log(payload);
+        const userid = payload && payload['sub'];
+        console.log('userid is', userid);
+      };
+      verify().catch((err) => {
+        console.log(err);
+      });
+      return {success: true};
     },
   );
 
