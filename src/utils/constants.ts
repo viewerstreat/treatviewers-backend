@@ -6,6 +6,7 @@ export const COLL_CONTESTS = 'contests';
 export const COLL_CLIPS = 'clips';
 export const COLL_QUESTIONS = 'questions';
 export const COLL_OTPS = 'otps';
+export const COLL_USED_TOKENS = 'usedTokens';
 export const COLL_FAVOURITES = 'favourites';
 export const COLL_NOTIFICATIONS = 'notifications';
 export const COLL_WALLETS = 'wallets';

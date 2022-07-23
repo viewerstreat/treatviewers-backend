@@ -26,8 +26,11 @@ export const TRANSACTION_OPTS: TransactionOptions = {
 // route prefix for APIs
 export const API_ROUTE_PREFIX = '/api/v1';
 
-// JWT token expiry time either in seconds or in string like 1d, 2h etc.
-export const JWT_EXPIRY: string | number = '1d';
+// JWT token expiry time short lived.
+export const JWT_EXPIRY: string | number = '1h';
+
+// JWT Refresh token expiry long lived
+export const REFRESH_TOKEN_EXPIRY: string | number = '10d';
 
 // Default Movie promotion expiry in days
 export const MOVIE_EXPIRY_DAYS = 10;
@@ -58,6 +61,8 @@ interface RouteName {
 // unprotected routes
 // application allow calls without the authorization header
 export const UNPROTECTED_ROUTES: RouteName[] = [
+  {method: 'POST', url: '/api/v1/user/renewToken'},
+  {method: 'POST', url: '/api/v1/user/login'},
   {method: 'POST', url: '/api/v1/user/create'},
   {method: 'GET', url: '/api/v1/user/verify'},
   {method: 'GET', url: '/api/v1/user/checkOtp'},

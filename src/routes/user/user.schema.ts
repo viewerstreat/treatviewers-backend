@@ -1,4 +1,5 @@
 import {RouteShorthandOptions} from 'fastify';
+import {LOGIN_SCHEME} from '../../models/user';
 
 const userTypeObject = {
   type: 'object',
@@ -8,56 +9,8 @@ const userTypeObject = {
     email: {type: 'string'},
     phone: {type: 'string'},
     profilePic: {type: 'string'},
+    loginScheme: {type: 'string'},
     isActive: {type: 'boolean'},
-    hasUsedReferralCode: {type: 'boolean'},
-    referralCode: {type: 'string'},
-    referredBy: {type: 'string'},
-  },
-};
-
-export const GetAllUsersOpts: RouteShorthandOptions = {
-  schema: {
-    description: 'Get list of users',
-    response: {
-      200: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          data: {
-            type: 'array',
-            items: userTypeObject,
-          },
-        },
-      },
-    },
-  },
-};
-
-interface FindUserReqParams {
-  id: number;
-}
-
-export type FindUserRequest = {
-  Params: FindUserReqParams;
-};
-
-export const FindUserOpts: RouteShorthandOptions = {
-  schema: {
-    params: {
-      type: 'object',
-      properties: {
-        id: {type: 'string'},
-      },
-    },
-    response: {
-      200: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          data: userTypeObject,
-        },
-      },
-    },
   },
 };
 
@@ -89,13 +42,6 @@ export const CreateUserOpts: RouteShorthandOptions = {
           message: {type: 'string'},
         },
       },
-      400: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
     },
   },
 };
@@ -108,12 +54,14 @@ export interface UpdateUserRequest {
   Body: {
     name?: string;
     profilePic?: string;
+    phone?: string;
+    email?: string;
   };
 }
 
 export const UpdateUserOpts: RouteShorthandOptions = {
   schema: {
-    description: 'Update user name or profile pic',
+    description: 'Update user API',
     headers: {
       type: 'object',
       required: ['authorization'],
@@ -126,6 +74,8 @@ export const UpdateUserOpts: RouteShorthandOptions = {
       properties: {
         name: {type: 'string', minLength: 1, maxLength: 50},
         profilePic: {type: 'string', format: 'uri'},
+        email: {type: 'string', format: 'email', maxLength: 100},
+        phone: {type: 'string', minLength: 10, maxLength: 10, pattern: '^[0-9]{10}$'},
       },
     },
     response: {
@@ -134,20 +84,6 @@ export const UpdateUserOpts: RouteShorthandOptions = {
         properties: {
           success: {type: 'boolean'},
           data: userTypeObject,
-        },
-      },
-      400: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
-      404: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
         },
       },
     },
@@ -172,13 +108,6 @@ export const VerifyUserRequestOpts: RouteShorthandOptions = {
     },
     response: {
       200: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
-      404: {
         type: 'object',
         properties: {
           success: {type: 'boolean'},
@@ -214,13 +143,7 @@ export const CheckOtpReqOpts: RouteShorthandOptions = {
           success: {type: 'boolean'},
           data: userTypeObject,
           token: {type: 'string'},
-        },
-      },
-      404: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
+          refreshToken: {type: 'string'},
         },
       },
     },
@@ -228,19 +151,25 @@ export const CheckOtpReqOpts: RouteShorthandOptions = {
 };
 
 export interface RenewTokenRequest {
-  Headers: {
-    authorization: string;
+  Body: {
+    loginScheme: LOGIN_SCHEME;
+    idToken: string | undefined;
+    fbToken: string | undefined;
+    refreshToken: string | undefined;
   };
 }
 
 export const RenewTokenReqOpts: RouteShorthandOptions = {
   schema: {
-    description: 'renew token validating the previous token. `authorization` header is required.',
-    headers: {
+    description: 'renew token validating the previous token.',
+    body: {
       type: 'object',
-      required: ['authorization'],
+      required: ['loginScheme'],
       properties: {
-        authorization: {type: 'string', minLength: 1},
+        loginScheme: {enum: ['GOOGLE', 'FACEBOOK', 'OTP_BASED']},
+        idToken: {type: 'string'},
+        fbToken: {type: 'string'},
+        refreshToken: {type: 'string'},
       },
     },
     response: {
@@ -250,13 +179,46 @@ export const RenewTokenReqOpts: RouteShorthandOptions = {
           success: {type: 'boolean'},
           data: userTypeObject,
           token: {type: 'string'},
+          refreshToken: {type: 'string'},
         },
       },
-      404: {
+    },
+  },
+};
+
+export interface LoginRequest {
+  Body: {
+    loginScheme: LOGIN_SCHEME;
+    name: string;
+    email: string;
+    profilePic: string;
+    idToken?: string;
+    fbToken?: string;
+  };
+}
+
+export const LoginReqOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'API for login user',
+    body: {
+      type: 'object',
+      required: ['loginScheme'],
+      properties: {
+        loginScheme: {enum: ['GOOGLE', 'FACEBOOK']},
+        name: {type: 'string'},
+        email: {type: 'string'},
+        profilePic: {type: 'string'},
+        idToken: {type: 'string'},
+        fbToken: {type: 'string'},
+      },
+    },
+    response: {
+      200: {
         type: 'object',
         properties: {
           success: {type: 'boolean'},
-          message: {type: 'string'},
+          data: userTypeObject,
+          token: {type: 'string'},
         },
       },
     },

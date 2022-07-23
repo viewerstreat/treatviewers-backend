@@ -1,7 +1,12 @@
 import fp from 'fastify-plugin';
 import fastifyJWT from '@fastify/jwt';
 import {FastifyReply, FastifyRequest} from 'fastify';
-import {API_ROUTE_PREFIX, JWT_EXPIRY, UNPROTECTED_ROUTES} from '../utils/config';
+import {
+  API_ROUTE_PREFIX,
+  JWT_EXPIRY,
+  REFRESH_TOKEN_EXPIRY,
+  UNPROTECTED_ROUTES,
+} from '../utils/config';
 
 export interface JWTPayload {
   id: number;
@@ -38,6 +43,24 @@ export default fp(async (fastify, opts) => {
     return token;
   });
 
+  fastify.decorate('generateRefreshToken', (id: number): string => {
+    const token = fastify.jwt.sign({id}, {expiresIn: REFRESH_TOKEN_EXPIRY});
+    return token;
+  });
+
+  fastify.decorate('validateRefreshToken', (refreshToken: string): number => {
+    try {
+      const payload = fastify.jwt.verify<{id: number}>(refreshToken);
+      if (!payload || !payload.id) {
+        throw new Error('not valid refresh token');
+      }
+      return payload.id;
+    } catch (err) {
+      fastify.log.error(err);
+      return 0;
+    }
+  });
+
   // onRequest hook
   fastify.addHook('onRequest', async (request, reply) => {
     const {routerPath, method} = request;
@@ -52,6 +75,8 @@ export default fp(async (fastify, opts) => {
 
   fastify.addHook('preHandler', (request, reply, done) => {
     request.generateToken = fastify.generateToken;
+    request.generateRefreshToken = fastify.generateRefreshToken;
+    request.validateRefreshToken = fastify.validateRefreshToken;
     done();
   });
 });
@@ -60,9 +85,13 @@ export default fp(async (fastify, opts) => {
 declare module 'fastify' {
   export interface FastifyRequest {
     generateToken(id: number, name?: string): string;
+    generateRefreshToken(id: number): string;
+    validateRefreshToken(refreshToken: string): number;
   }
   export interface FastifyInstance {
     authenticate(request: FastifyRequest, reply: FastifyReply): Promise<void>;
     generateToken(id: number, name?: string): string;
+    generateRefreshToken(id: number): string;
+    validateRefreshToken(refreshToken: string): number;
   }
 }

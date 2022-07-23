@@ -38,11 +38,13 @@
     "fastify-plugin": "^3.0.0",
     "fastify-tsconfig": "^1.0.1",
     "google-auth-library": "^8.1.1",
+    "node-fetch": "^2.6.7",
     "toad-scheduler": "^1.6.1",
     "typescript": "^4.5.4"
   },
   "devDependencies": {
     "@types/node": "^17.0.8",
+    "@types/node-fetch": "^2.6.2",
     "@types/tap": "^15.0.5",
     "concurrently": "^7.0.0",
     "tap": "^16.1.0",
