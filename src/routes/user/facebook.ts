@@ -1,9 +1,6 @@
 import {UserSchema} from '../../models/user';
 import fetch from 'node-fetch';
 
-// const fetch = (url: RequestInfo, init?: RequestInit) =>
-//   import('node-fetch').then(({default: fetch}) => fetch(url, init));
-
 const FB_ME_URL = 'https://graph.facebook.com/me';
 
 export const verifyFbToken = async (fbToken: string): Promise<UserSchema> => {

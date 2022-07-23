@@ -402,9 +402,6 @@ export const loginHandler = async (request: LoginFstReq, reply: FastifyReply) =>
     data.contestWon = 0;
     data.createdTs = request.getCurrentTimestamp();
     data.lastLoginTime = request.getCurrentTimestamp();
-
-    request.log.info(data);
-
     await collUser?.insertOne(data);
   }
   // generate short lived token
