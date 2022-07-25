@@ -40,7 +40,7 @@ export const createUserHandler = async (request: CrtUsrFstReq, reply: FastifyRep
   const email = request.body.email || '';
   if (email) {
     const checkEmailResult = await collUser?.findOne({email});
-    if (!checkEmailResult) {
+    if (checkEmailResult) {
       return reply.badRequest('User already exists with same email');
     }
   }
