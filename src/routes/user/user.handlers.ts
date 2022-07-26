@@ -15,11 +15,15 @@ import {
 } from './user.schema';
 
 // update lastLoginTime for an user
-const updateLastLoginTime = async (request: FastifyRequest, userId: number) => {
+const updateLastLoginTime = async (
+  request: FastifyRequest,
+  userId: number,
+  loginScheme: LOGIN_SCHEME,
+) => {
   const collUser = request.mongo.db?.collection<UserSchema>(COLL_USERS);
   await collUser?.updateOne(
     {id: userId},
-    {$set: {lastLoginTime: request.getCurrentTimestamp(), loginScheme: LOGIN_SCHEME.OTP_BASED}},
+    {$set: {lastLoginTime: request.getCurrentTimestamp(), loginScheme}},
   );
 };
 
@@ -170,7 +174,7 @@ export const checkOtpHandler = async (request: CkOtpFstReq, reply: FastifyReply)
     return reply.notFound('not valid otp');
   }
   // otp validation successful update lastLoginTime for the user
-  await updateLastLoginTime(request, userData.id);
+  await updateLastLoginTime(request, userData.id, LOGIN_SCHEME.OTP_BASED);
   // otp validation is successful generate token and refreshToken
   const token = request.generateToken(userData.id, userData.name);
   const refreshToken = request.generateRefreshToken(userData.id);
@@ -270,7 +274,7 @@ const handleGoogleRenewal = async (request: ReToFstReq, reply: FastifyReply) => 
       return reply.badRequest('GOOGLE loginScheme is not used to login previously');
     }
     // token validation is successful update lastLoginTime
-    await updateLastLoginTime(request, user.id);
+    await updateLastLoginTime(request, user.id, LOGIN_SCHEME.GOOGLE);
     // generate token
     const token = request.generateToken(user.id, user.name);
     // return successful response
@@ -314,7 +318,7 @@ const handleFbRenewal = async (request: ReToFstReq, reply: FastifyReply) => {
       return reply.badRequest('FACEBOOK loginScheme is not used to login previously');
     }
     // token validation is successful update lastLoginTime
-    await updateLastLoginTime(request, user.id);
+    await updateLastLoginTime(request, user.id, LOGIN_SCHEME.FACEBOOK);
     // generate token
     const token = request.generateToken(user.id, user.name);
     // return successful response
