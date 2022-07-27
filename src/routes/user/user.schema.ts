@@ -29,7 +29,7 @@ export const CreateUserOpts: RouteShorthandOptions = {
       required: ['name', 'phone'],
       properties: {
         name: {type: 'string', minLength: 1, maxLength: 50},
-        email: {type: 'string', format: 'email', maxLength: 100},
+        email: {anyOf: [{type: 'string', format: 'email'}, {const: ''}]},
         phone: {type: 'string', minLength: 10, maxLength: 10, pattern: '^[0-9]{10}$'},
         profilePic: {type: 'string', format: 'uri'},
       },
