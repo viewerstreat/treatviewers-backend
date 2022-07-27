@@ -53,6 +53,12 @@ export const AWS_BUCKET = 'trailsbuddy-1';
 // scheduler job interval in second
 export const SCHEDULER_INTERVAL = 300;
 
+// cleanup jon interval in hours
+export const CLEANUP_INTERVAL = 24;
+
+// token cleanup duration in days
+export const TOKEN_CLEANUP_DRURATION = 10;
+
 // minimum amount for balance withdrawal
 export const WITHDRAW_BAL_MIN_AMOUNT = 10;
 
