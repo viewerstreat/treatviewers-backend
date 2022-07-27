@@ -53,6 +53,9 @@ export const AWS_BUCKET = 'trailsbuddy-1';
 // scheduler job interval in second
 export const SCHEDULER_INTERVAL = 300;
 
+// minimum amount for balance withdrawal
+export const WITHDRAW_BAL_MIN_AMOUNT = 10;
+
 interface RouteName {
   method: 'GET' | 'POST';
   url: string;

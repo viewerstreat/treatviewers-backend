@@ -53,12 +53,7 @@ export const AddBalInitOpts: RouteShorthandOptions = {
         properties: {
           success: {type: 'boolean'},
           transactionId: {type: 'string'},
-        },
-      },
-      409: {
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
+          appUpiId: {type: 'string'},
         },
       },
     },
@@ -107,20 +102,6 @@ export const AddBalEndOpts: RouteShorthandOptions = {
           message: {type: 'string'},
         },
       },
-      404: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
-      409: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
     },
   },
 };
@@ -158,13 +139,84 @@ export const PayContestOpts: RouteShorthandOptions = {
           message: {type: 'string'},
         },
       },
-      404: {
+    },
+  },
+};
+
+export interface WithdrawBalInitReq {
+  Headers: {
+    authorization: string;
+  };
+  Body: {
+    amount: number;
+  };
+}
+
+export const WithdrawBalInitOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'Withdraw Balnce initialize API',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string', minLength: 1},
+      },
+    },
+    body: {
+      type: 'object',
+      required: ['amount'],
+      properties: {
+        amount: {type: 'number', minimum: 1, multipleOf: 1},
+      },
+    },
+    response: {
+      200: {
         properties: {
           success: {type: 'boolean'},
-          message: {type: 'string'},
+          transactionId: {type: 'string'},
         },
       },
-      409: {
+    },
+  },
+};
+
+export interface WithdrawBalEndRequest {
+  Headers: {
+    authorization: string;
+  };
+  Body: {
+    transactionId: string;
+    amount: number;
+    isSuccessful: boolean;
+    errorReason?: string;
+    trackingId?: string;
+  };
+}
+
+export const WithdrawBalEndOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'Withdraw Balnce finalize API',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
+    body: {
+      type: 'object',
+      required: ['transactionId', 'amount', 'isSuccessful'],
+      properties: {
+        transactionId: {type: 'string', minLength: 24, maxLength: 24},
+        amount: {type: 'number', minimum: 1, multipleOf: 1},
+        isSuccessful: {type: 'boolean'},
+        errorReason: {type: 'string'},
+        trackingId: {type: 'string'},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
         properties: {
           success: {type: 'boolean'},
           message: {type: 'string'},

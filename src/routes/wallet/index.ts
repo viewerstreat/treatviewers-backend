@@ -4,6 +4,8 @@ import {
   addBalInitHandler,
   getWalletBalHandler,
   payContestHandler,
+  withdrawBalEndHandler,
+  withdrawBalInitHandler,
 } from './wallet.handler';
 import {
   AddBalEndOpts,
@@ -13,6 +15,10 @@ import {
   GetWalletBalOpts,
   PayContestOpts,
   PayContestRequest,
+  WithdrawBalEndOpts,
+  WithdrawBalEndRequest,
+  WithdrawBalInitOpts,
+  WithdrawBalInitReq,
 } from './wallet.schema';
 
 const walletRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
@@ -24,6 +30,14 @@ const walletRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => 
   fastify.post<AddBalEndRequest>('/addBalanceEnd', AddBalEndOpts, addBalEndHandler);
   // initialize Pay Contest transaction
   fastify.post<PayContestRequest>('/payContest', PayContestOpts, payContestHandler);
+  // initialize Withdraw balance transaction
+  fastify.post<WithdrawBalInitReq>('/withdrawBalInit', WithdrawBalInitOpts, withdrawBalInitHandler);
+  // finalize Withdraw Balance transaction
+  fastify.post<WithdrawBalEndRequest>(
+    '/withdrawBalanceEnd',
+    WithdrawBalEndOpts,
+    withdrawBalEndHandler,
+  );
 };
 
 export default walletRoute;

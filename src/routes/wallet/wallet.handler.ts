@@ -9,14 +9,20 @@ import {
   WalletTransactionSchema,
   WALLET_TRANSACTION_TYPE,
 } from '../../models/wallet';
-import {TRANSACTION_OPTS} from '../../utils/config';
+import {TRANSACTION_OPTS, WITHDRAW_BAL_MIN_AMOUNT} from '../../utils/config';
 import {
   COLL_CONTESTS,
   COLL_PLAY_TRACKERS,
   COLL_WALLETS,
   COLL_WALLET_TRANSACTIONS,
 } from '../../utils/constants';
-import {AddBalEndRequest, AddBalInitRequest, PayContestRequest} from './wallet.schema';
+import {
+  AddBalEndRequest,
+  AddBalInitRequest,
+  PayContestRequest,
+  WithdrawBalEndRequest,
+  WithdrawBalInitReq,
+} from './wallet.schema';
 
 // get user's current wallet balance
 // if there is no record exists in the collection
@@ -34,18 +40,16 @@ export const getWalletBalHandler = async (request: FastifyRequest) => {
 };
 
 // handler function for add balance init route
-// checks if there is any pending transaction exists for the user
-// if exists then returns 409 error status
 // otherwise creates a new transactionId
 type AddBalInitFastifyReq = FastifyRequest<AddBalInitRequest>;
 export const addBalInitHandler = async (request: AddBalInitFastifyReq, reply: FastifyReply) => {
-  const coll = request.mongo.db?.collection<WalletTransactionSchema>(COLL_WALLET_TRANSACTIONS);
-  // check for exists transaction with PENDING status
-  const result = await coll?.findOne({status: TRANSACTION_STATUS.PENDING});
-  if (result) {
-    reply.status(409).send({success: false, message: 'PENDING transaction exists for user'});
-    return;
+  // get appUpiId from the environment
+  const appUpiId = process.env.APP_UPI_ID;
+  // throw error if appUpiId is not found
+  if (!appUpiId) {
+    return reply.internalServerError('appUpiId not found');
   }
+  const coll = request.mongo.db?.collection<WalletTransactionSchema>(COLL_WALLET_TRANSACTIONS);
   // round off the decimal places
   const amount = Math.round(request.body.amount);
   // get balanceBefore field value
@@ -59,8 +63,11 @@ export const addBalInitHandler = async (request: AddBalInitFastifyReq, reply: Fa
     createdTs: request.getCurrentTimestamp(),
   };
   const res = await coll?.insertOne(doc);
+  if (!res?.insertedId) {
+    return reply.internalServerError('Not able to initiate trasaction');
+  }
   // return the transactionId in the response
-  return {success: true, transactionId: res?.insertedId};
+  return {success: true, transactionId: res.insertedId, appUpiId};
 };
 
 // handler function for add balance finalize route
@@ -77,14 +84,13 @@ export const addBalEndHandler = async (request: AddBalEndFastifyReq, reply: Fast
   const transactionDoc = await coll?.findOne(filter);
   // check for valid transactionId
   if (!transactionDoc) {
-    reply.status(404).send({success: false, message: 'transaction not found'});
-    return;
+    return reply.notFound('transaction not found');
   }
   // check for transaction status
   if (transactionDoc.status !== TRANSACTION_STATUS.PENDING) {
-    reply.status(409).send({success: false, message: 'transaction status is not PENDING'});
-    return;
+    return reply.badRequest('transaction status is not PENDING');
   }
+  const updatedTs = request.getCurrentTimestamp();
   // update the transaction to error
   if (request.body.isSuccessful === false) {
     await coll?.updateOne(filter, {
@@ -92,6 +98,7 @@ export const addBalEndHandler = async (request: AddBalEndFastifyReq, reply: Fast
         status: TRANSACTION_STATUS.ERROR,
         errorReason: request.body.errorReason,
         trackingId: request.body.trackingId,
+        updatedTs,
       },
     });
     return {success: true, message: 'updated successfully'};
@@ -101,25 +108,21 @@ export const addBalEndHandler = async (request: AddBalEndFastifyReq, reply: Fast
   const amount = Math.round(request.body.amount);
   // if the amount do not match then return 409
   if (amount !== transactionDoc.amount) {
-    reply.status(409).send({success: false, message: 'amount do not match'});
-    return;
+    return reply.badRequest('amount do not match');
   }
 
   const balance = await getUserBalance(request);
   // check balanceBefore value matches
   if (transactionDoc?.balanceBefore !== balance) {
-    reply.status(409).send({
-      success: false,
-      message: `balance(${balance}) do not match with transaction balanceBefore(${transactionDoc?.balanceBefore}) field`,
-    });
-    return;
+    return reply.badRequest(
+      `balance(${balance}) do not match with transaction balanceBefore(${transactionDoc?.balanceBefore}) field`,
+    );
   }
   // start session for mongo transaction
   const session = request.mongo.client.startSession();
   let isError = false;
   let errorMessage = '';
   let transactionResult = undefined;
-  const updatedTs = request.getCurrentTimestamp();
   try {
     transactionResult = await session.withTransaction(async () => {
       // increase user wallet balance
@@ -165,14 +168,12 @@ export const addBalEndHandler = async (request: AddBalEndFastifyReq, reply: Fast
         updatedTs: request.getCurrentTimestamp(),
       },
     });
-    reply.status(409).send({success: false, message: errorMessage});
-    return;
+    return reply.internalServerError(errorMessage);
   }
 
   // if for some reason transactionResult is an empty object return error status
   if (!transactionResult) {
-    reply.status(409).send({success: false, message: 'Unknown error occurred'});
-    return;
+    return reply.internalServerError('Unknown error occurred');
   }
 
   // return successful response when all is fine
@@ -202,22 +203,18 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
   };
   const contest = await collContest?.findOne(filter);
   if (!contest) {
-    reply.status(404).send({success: false, message: 'contest not found'});
-    return;
+    return reply.notFound('contest not found');
   }
   // check if the playTracker exists for the userId and contestId
   const playTracker = await collPlayTracker?.findOne({contestId, userId});
   if (playTracker && playTracker.status === PLAY_STATUS.FINISHED) {
-    reply.status(409).send({success: false, message: 'contest already finished for user'});
-    return;
+    return reply.badRequest('contest already finished for user');
   }
   if (playTracker && playTracker.status === PLAY_STATUS.STARTED) {
-    reply.status(409).send({success: false, message: 'contest already started for user'});
-    return;
+    return reply.badRequest('contest already started for user');
   }
   if (playTracker && playTracker.status === PLAY_STATUS.PAID) {
-    reply.status(409).send({success: false, message: 'contest already paid for user'});
-    return;
+    return reply.badRequest('contest already paid for user');
   }
   // if the playTracker do not exists then insert in INIT status
   if (!playTracker) {
@@ -304,8 +301,169 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
     return {success: true, message: 'Updated successfully'};
   } catch (err: any) {
     request.log.error(err);
-    reply.status(409).send({success: false, message: err.toString()});
+    reply.internalServerError(err.toString());
   } finally {
     session.endSession();
   }
+};
+
+// handler function for withdraw balance initialize
+// check minimum allowed balance
+// check if user has balance in wallet
+// create a new request for withdraw
+// if already an withdraw request exists in Pending status
+// then return error
+type WthDrwBalFst = FastifyRequest<WithdrawBalInitReq>;
+export const withdrawBalInitHandler = async (request: WthDrwBalFst, reply: FastifyReply) => {
+  const coll = request.mongo.db?.collection<WalletTransactionSchema>(COLL_WALLET_TRANSACTIONS);
+
+  // check if already pending withdraw request exists
+  const filter: Filter<WalletTransactionSchema> = {
+    userId: request.user.id,
+    transactionType: WALLET_TRANSACTION_TYPE.WITHDRAW,
+    status: TRANSACTION_STATUS.PENDING,
+  };
+  const rs = coll?.findOne(filter);
+  if (rs) {
+    return reply.badRequest('Already a pending withdraw request exists');
+  }
+  // round off the decimal places
+  const amount = Math.round(request.body.amount);
+  const balance = await getUserBalance(request);
+  if (amount < WITHDRAW_BAL_MIN_AMOUNT) {
+    return reply.badRequest('Minimum amount for withdraw is ' + WITHDRAW_BAL_MIN_AMOUNT);
+  }
+  if (balance < amount) {
+    return reply.badRequest('Insufficient balance');
+  }
+  const doc: WalletTransactionSchema = {
+    userId: request.user.id,
+    transactionType: WALLET_TRANSACTION_TYPE.WITHDRAW,
+    amount,
+    balanceBefore: balance,
+    status: TRANSACTION_STATUS.PENDING,
+    createdTs: request.getCurrentTimestamp(),
+  };
+  const res = await coll?.insertOne(doc);
+  if (!res?.insertedId) {
+    return reply.internalServerError('Not able to initiate trasaction');
+  }
+  // return the transactionId in the response
+  return {success: true, transactionId: res.insertedId};
+};
+
+// handler function for withdraw balance finalize route
+// expects a valid transactionId
+// isSuccessful is a mandatory field in request body
+// if isSuccessful is false then it just updates the transaction and returns 200
+// otherwise update the wallet balance and update the transaction status to COMPLETED
+// within a session transaction
+type WthBalEndFasReq = FastifyRequest<WithdrawBalEndRequest>;
+export const withdrawBalEndHandler = async (request: WthBalEndFasReq, reply: FastifyReply) => {
+  const walletColl = request.mongo.db?.collection<WalletSchema>(COLL_WALLETS);
+  const coll = request.mongo.db?.collection<WalletTransactionSchema>(COLL_WALLET_TRANSACTIONS);
+  const filter: Filter<WalletTransactionSchema> = {_id: new ObjectId(request.body.transactionId)};
+  const transactionDoc = await coll?.findOne(filter);
+  // check for valid transactionId
+  if (!transactionDoc) {
+    return reply.notFound('transaction not found');
+  }
+  // check for transaction status
+  if (transactionDoc.status !== TRANSACTION_STATUS.PENDING) {
+    return reply.badRequest('transaction status is not PENDING');
+  }
+  const updatedTs = request.getCurrentTimestamp();
+  // update the transaction to error
+  if (request.body.isSuccessful === false) {
+    await coll?.updateOne(filter, {
+      $set: {
+        status: TRANSACTION_STATUS.ERROR,
+        errorReason: request.body.errorReason,
+        trackingId: request.body.trackingId,
+        updatedTs,
+      },
+    });
+    return {success: true, message: 'updated successfully'};
+  }
+
+  // round off decimal places
+  const amount = Math.round(request.body.amount);
+  // if the amount do not match then return 409
+  if (amount !== transactionDoc.amount) {
+    return reply.badRequest('amount do not match');
+  }
+
+  const balance = await getUserBalance(request);
+  if (balance < amount) {
+    await coll?.updateOne(filter, {
+      $set: {
+        status: TRANSACTION_STATUS.ERROR,
+        errorReason: `Insufficient balance. Balance ${balance}. Amount ${amount}`,
+        trackingId: request.body.trackingId,
+        updatedTs,
+      },
+    });
+    return reply.badRequest('Cannot process transaction. Insufficient balance');
+  }
+
+  // start session for mongo transaction
+  const session = request.mongo.client.startSession();
+  let isError = false;
+  let errorMessage = '';
+  let transactionResult = undefined;
+  try {
+    transactionResult = await session.withTransaction(async () => {
+      // increase user wallet balance
+      const updtRslt = await walletColl?.findOneAndUpdate(
+        {userId: request.user.id, balance: {$gte: transactionDoc.amount}},
+        {$inc: {balance: transactionDoc.amount * -1}, $set: {updatedTs}},
+        {upsert: true, session, returnDocument: 'after'},
+      );
+      // throw error if wallet balance update is unsuccessful
+      if (!updtRslt?.ok) {
+        throw new Error('Not able to update wallet balance, aborting.');
+      }
+      const balanceAfter = updtRslt.value?.balance;
+      const update: UpdateFilter<WalletTransactionSchema> = {
+        $set: {
+          balanceAfter,
+          status: TRANSACTION_STATUS.COMPLETED,
+          trackingId: request.body.trackingId,
+          updatedTs,
+        },
+      };
+      // update the trasanction with COMPLETED status
+      const rslt = await coll?.updateOne(filter, update, {session});
+      const modifiedCount = rslt?.modifiedCount || 0;
+      if (modifiedCount === 0) {
+        throw new Error('Not able to update transaction');
+      }
+    }, TRANSACTION_OPTS);
+  } catch (err: any) {
+    transactionResult = undefined;
+    isError = true;
+    errorMessage = err.toString();
+  } finally {
+    session.endSession();
+  }
+  // if any error occurred during the transaction update the
+  // transaction with ERROR status and errorReason
+  if (isError && errorMessage) {
+    coll?.updateOne(filter, {
+      $set: {
+        status: TRANSACTION_STATUS.ERROR,
+        errorReason: errorMessage,
+        updatedTs,
+      },
+    });
+    return reply.internalServerError(errorMessage);
+  }
+
+  // if for some reason transactionResult is an empty object return error status
+  if (!transactionResult) {
+    return reply.internalServerError('Unknown error occurred');
+  }
+
+  // return successful response when all is fine
+  return {success: true, message: 'Updated successfully'};
 };
