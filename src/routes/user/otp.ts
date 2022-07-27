@@ -37,5 +37,7 @@ export const saveOtp = async (userId: number, request: FastifyRequest) => {
     userId,
     otp,
     validTill: request.getCurrentTimestamp() + OTP_VALIDITY_MINS * 60 * 1000,
+    isUsed: false,
+    updateTs: request.getCurrentTimestamp(),
   });
 };

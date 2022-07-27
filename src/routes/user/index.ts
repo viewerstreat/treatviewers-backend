@@ -2,10 +2,9 @@ import {FastifyPluginAsync} from 'fastify';
 import {
   checkOtpHandler,
   createUserHandler,
+  loginHandler,
   renewTokenHandler,
   updateUserHandler,
-  // findUserHandler,
-  // getAllUsersHandler,
   verifyUserHandler,
 } from './user.handlers';
 import {
@@ -13,30 +12,17 @@ import {
   CheckOtpRequest,
   CreateUserOpts,
   CreateUserRequest,
+  LoginReqOpts,
+  LoginRequest,
   RenewTokenReqOpts,
   RenewTokenRequest,
   UpdateUserOpts,
   UpdateUserRequest,
-  // FindUserOpts,
-  // FindUserRequest,
-  // GetAllUsersOpts,
   VerifyUserRequest,
   VerifyUserRequestOpts,
 } from './user.schema';
 
 const userRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  // // get all users list
-  // fastify.get('/', GetAllUsersOpts, (request, reply) =>
-  //   getAllUsersHandler(request, reply, fastify),
-  // );
-
-  // // find a particular user by id
-  // fastify.get<FindUserRequest>(
-  //   '/:id',
-  //   {onRequest: [fastify.authenticate], ...FindUserOpts},
-  //   (request, reply) => findUserHandler(request, reply, fastify),
-  // );
-
   // verify user
   fastify.get<VerifyUserRequest>('/verify', VerifyUserRequestOpts, verifyUserHandler);
 
@@ -44,13 +30,16 @@ const userRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.get<CheckOtpRequest>('/checkOtp', CheckOtpReqOpts, checkOtpHandler);
 
   // renew token
-  fastify.get<RenewTokenRequest>('/renewToken', RenewTokenReqOpts, renewTokenHandler);
+  fastify.post<RenewTokenRequest>('/renewToken', RenewTokenReqOpts, renewTokenHandler);
 
   // create user
   fastify.post<CreateUserRequest>('/create', CreateUserOpts, createUserHandler);
 
   // update user
   fastify.post<UpdateUserRequest>('/update', UpdateUserOpts, updateUserHandler);
+
+  // login user
+  fastify.post<LoginRequest>('/login', LoginReqOpts, loginHandler);
 };
 
 export default userRoute;
