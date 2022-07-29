@@ -1,20 +1,16 @@
 import {ObjectId} from '@fastify/mongodb';
-import {Filter} from 'mongodb';
+import {Filter, UpdateFilter} from 'mongodb';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {ContestSchema, CONTEST_STATUS} from '../../models/contest';
 import {Answer, PlayTrackerSchema, PLAY_STATUS} from '../../models/playTracker';
 import {COLL_CONTESTS, COLL_PLAY_TRACKERS, COLL_QUESTIONS} from '../../utils/constants';
-import {AnswerRequest, FinishRequest, PlayTrackerInitReq} from './playTracker.schema';
+import {AnswerRequest, FinishRequest, PlayStartReq, PlayTrackerGetReq} from './playTracker.schema';
 import {QuestionSchema} from '../../models/question';
 
 // get playTracker
 // if contestId is not valid then return 404
-// if the playTracker is in PAID status then update the status to STARTED
-// if the playTracker is in INIT status or does not exist then
-// check if the entryFee is zero. Otherwise return 409 error.
-// Because if the entryFee is non zero then it has to be PAID first.
-// if the playTracker does not exist then insert with status STARTED.
-type InitReq = FastifyRequest<PlayTrackerInitReq>;
+// if the playTracker does not exist then insert with status INIT.
+type InitReq = FastifyRequest<PlayTrackerGetReq>;
 export const playTrackerHandler = async (request: InitReq, reply: FastifyReply) => {
   const collContest = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
   const collPlayTracker = request.mongo.db?.collection<PlayTrackerSchema>(COLL_PLAY_TRACKERS);
@@ -24,62 +20,25 @@ export const playTrackerHandler = async (request: InitReq, reply: FastifyReply) 
   // check if the contestId is valid
   const contest = await collContest?.findOne({_id: new ObjectId(contestId)});
   if (!contest) {
-    reply.status(404).send({success: false, message: 'contest not found'});
-    return;
+    return reply.notFound('contest not found');
   }
   // check if the contestId already exists in playTracker
   const playTrackerResult = await collPlayTracker?.findOne({userId, contestId});
   // if the status is finished then return success response
-  if (playTrackerResult && playTrackerResult.status === PLAY_STATUS.FINISHED) {
+  if (playTrackerResult) {
     return {success: true, data: playTrackerResult};
   }
   // check if contest is active
   if (contest.status !== CONTEST_STATUS.ACTIVE) {
-    reply.status(409).send({success: false, message: 'contest status is not active'});
-    return;
+    return reply.badRequest('contest status is not active');
   }
   // check if startTime is greater than current timestamp then return error
   if (contest.startTime > currTs) {
-    reply.status(409).send({success: false, message: 'contest has not started yet'});
-    return;
+    return reply.badRequest('contest has not started yet');
   }
   // check if endTime is not expired
   if (contest.endTime < currTs) {
-    reply.status(409).send({success: false, message: 'contest endTime is over already'});
-    return;
-  }
-  // if the status is started then update resumeTs and return success response
-  if (playTrackerResult && playTrackerResult.status === PLAY_STATUS.STARTED) {
-    await collPlayTracker?.updateOne({userId, contestId}, {$push: {resumeTs: currTs}});
-    return {success: true, data: playTrackerResult};
-  }
-  // if entryFee is non zero and status is not PAID
-  if (contest.entryFee && contest.entryFee > 0 && PLAY_STATUS.PAID !== playTrackerResult?.status) {
-    reply.status(409).send({success: false, message: 'contest is not paid yet'});
-    return;
-  }
-
-  // if the playTracker exists at this point then it must be INIT or PAID status
-  // update the status to STARTED and return the updated document
-  if (playTrackerResult) {
-    // if the status is paid
-    const result = await collPlayTracker?.findOneAndUpdate(
-      {contestId, userId},
-      {
-        $set: {
-          status: PLAY_STATUS.STARTED,
-          startTs: currTs,
-          currQuestionNo: 0,
-          totalQuestions: contest.questionCount || 0,
-          answers: [],
-          totalAnswered: 0,
-          updatedTs: currTs,
-        },
-      },
-      {upsert: false, returnDocument: 'after'},
-    );
-    const data = result?.value;
-    return {success: true, data};
+    return reply.badRequest('contest endTime is over already');
   }
 
   // insert into playTracker if not exists already
@@ -87,8 +46,7 @@ export const playTrackerHandler = async (request: InitReq, reply: FastifyReply) 
     userId,
     contestId,
     initTs: currTs,
-    status: PLAY_STATUS.STARTED,
-    startTs: currTs,
+    status: PLAY_STATUS.INIT,
     currQuestionNo: 0,
     totalQuestions: contest.questionCount || 0,
     answers: [],
@@ -96,6 +54,67 @@ export const playTrackerHandler = async (request: InitReq, reply: FastifyReply) 
   };
   await collPlayTracker?.insertOne(data);
   return {success: true, data};
+};
+
+// handler function for start play
+// playTracker must exists at this point
+// playTracker should be paid already or entryFee is zero
+// contest startTs endTs should be valid
+// update the playTracker and return
+type StrPlFstReq = FastifyRequest<PlayStartReq>;
+export const startPlayHandler = async (request: StrPlFstReq, reply: FastifyReply) => {
+  const collContest = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
+  const collPlayTracker = request.mongo.db?.collection<PlayTrackerSchema>(COLL_PLAY_TRACKERS);
+  const userId = request.user.id;
+  const {contestId} = request.body;
+  const currTs = request.getCurrentTimestamp();
+  const [contest, playTracker] = await Promise.all([
+    collContest?.findOne({_id: new ObjectId(contestId)}),
+    collPlayTracker?.findOne({userId, contestId}),
+  ]);
+
+  // check if the contestId is valid
+  if (!contest) {
+    return reply.notFound('contest not found');
+  }
+  // check if the contestId already exists in playTracker
+  if (!playTracker) {
+    return reply.badRequest('playTracker not found');
+  }
+  // check if contest is active
+  if (contest.status !== CONTEST_STATUS.ACTIVE) {
+    return reply.badRequest('contest status is not active');
+  }
+  // check if startTime is greater than current timestamp then return error
+  if (contest.startTime > currTs) {
+    return reply.badRequest('contest has not started yet');
+  }
+  // check if endTime is not expired
+  if (contest.endTime < currTs) {
+    return reply.badRequest('contest endTime is over already');
+  }
+  // if play status is finished then return error
+  if (playTracker.status === PLAY_STATUS.FINISHED) {
+    return reply.badRequest('play is already finished');
+  }
+  // contest must be free or already paid or in started status
+  if (playTracker.status === PLAY_STATUS.INIT && contest.entryFee && contest.entryFee > 0) {
+    return reply.badRequest('contest is not paid yet');
+  }
+
+  const update: UpdateFilter<PlayTrackerSchema> = {};
+  if (playTracker.status === PLAY_STATUS.STARTED) {
+    update.$push = {resumeTs: currTs};
+  }
+  if (playTracker.status === PLAY_STATUS.INIT || playTracker.status === PLAY_STATUS.PAID) {
+    update.$set = {startTs: currTs, status: PLAY_STATUS.STARTED};
+  }
+  update.$set = {...update.$set, updatedTs: currTs};
+  const result = await collPlayTracker?.findOneAndUpdate({contestId, userId}, update, {
+    returnDocument: 'after',
+    upsert: false,
+  });
+  return {success: true, data: result?.value};
 };
 
 // handler function for saving answer given by the user
@@ -125,34 +144,28 @@ export const answerHandler = async (request: AnsFstReq, reply: FastifyReply) => 
   ]);
   // check if the contestId is valid
   if (!contest) {
-    reply.status(404).send({success: false, message: 'contest not found'});
-    return;
+    return reply.badRequest('contest not found');
   }
   // check if the contestId already exists in playTracker
   if (!playTracker) {
-    reply.status(404).send({success: false, message: 'playTracker not found'});
-    return;
+    return reply.badRequest('playTracker not found');
   }
   // check if the question is valid
   if (!question) {
-    reply.status(404).send({success: false, message: 'question not found'});
-    return;
+    return reply.badRequest('question not found');
   }
   // playTracker status must be STARTED
   if (playTracker.status !== PLAY_STATUS.STARTED) {
-    reply.status(409).send({success: false, message: 'playTracker status must be STARTED'});
-    return;
+    return reply.badRequest('playTracker status must be STARTED');
   }
   // check if endTime is not expired
   if (contest.endTime < currTs) {
-    reply.status(409).send({success: false, message: 'contest endTime is over already'});
-    return;
+    return reply.badRequest('contest endTime is over already');
   }
   // questionNo and currQuestionNo from playTracker should match
   const currQuestionNo = playTracker.currQuestionNo || 0;
   if (request.body.questionNo !== currQuestionNo + 1) {
-    reply.status(409).send({success: false, message: `currQuestionNo is ${currQuestionNo}`});
-    return;
+    return reply.badRequest(`currQuestionNo is ${currQuestionNo}`);
   }
   // get the correct option for the question
   const correctOption = question.options?.filter((e) => e.isCorrect) || [];
@@ -201,18 +214,15 @@ export const finishHandler = async (request: FnshFastReq, reply: FastifyReply) =
   ]);
   // check if the contestId is valid
   if (!contest) {
-    reply.status(404).send({success: false, message: 'contest not found'});
-    return;
+    return reply.badRequest('contest not found');
   }
   // check if the contestId already exists in playTracker
   if (!playTracker) {
-    reply.status(404).send({success: false, message: 'playTracker not found'});
-    return;
+    return reply.badRequest('playTracker not found');
   }
   // playTracker status must be STARTED
   if (playTracker.status !== PLAY_STATUS.STARTED) {
-    reply.status(409).send({success: false, message: 'playTracker status must be STARTED'});
-    return;
+    return reply.badRequest('playTracker status must be STARTED');
   }
   const result = await collPlayTracker?.findOneAndUpdate(
     filterPlayTrk,

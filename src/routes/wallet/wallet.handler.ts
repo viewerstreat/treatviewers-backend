@@ -184,7 +184,7 @@ export const addBalEndHandler = async (request: AddBalEndFastifyReq, reply: Fast
 // check for valid contestId
 // check for wallet balance > entry Fee
 // if the playTracker already exists and status is STARTED or FINISHED
-// then return 409
+// then return error
 // if playTracker is not created for the contestId and userId
 // then create playTracker and update status to PAID
 type PayContestFstReq = FastifyRequest<PayContestRequest>;
@@ -195,11 +195,13 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
   const collTrans = request.mongo.db?.collection<WalletTransactionSchema>(COLL_WALLET_TRANSACTIONS);
   const userId = request.user.id;
   const {contestId} = request.body;
+  const currTime = request.getCurrentTimestamp();
   // check if the contestId is valid
   const filter: Filter<ContestSchema> = {
     _id: new ObjectId(contestId),
     status: CONTEST_STATUS.ACTIVE,
-    endTime: {$gt: request.getCurrentTimestamp()},
+    startTime: {$lte: currTime},
+    endTime: {$gt: currTime},
   };
   const contest = await collContest?.findOne(filter);
   if (!contest) {
@@ -222,8 +224,8 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
       contestId,
       userId,
       status: PLAY_STATUS.INIT,
-      initTs: request.getCurrentTimestamp(),
-      createdTs: request.getCurrentTimestamp(),
+      initTs: currTime,
+      createdTs: currTime,
     });
   }
   // start a session

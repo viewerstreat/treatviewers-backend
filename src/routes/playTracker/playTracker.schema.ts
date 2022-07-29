@@ -16,7 +16,7 @@ const playTrackerObject = {
   },
 };
 
-export interface PlayTrackerInitReq {
+export interface PlayTrackerGetReq {
   Headers: {
     authorization: string;
   };
@@ -49,16 +49,39 @@ export const PlayTrackerOpts: RouteShorthandOptions = {
           data: playTrackerObject,
         },
       },
-      404: {
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
+    },
+  },
+};
+
+export interface PlayStartReq {
+  Body: {
+    contestId: string;
+  };
+}
+
+export const PlayStartReqOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'API to start/resume play',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string'},
       },
-      409: {
+    },
+    body: {
+      type: 'object',
+      required: ['contestId'],
+      properties: {
+        contestId: {type: 'string', minLength: 24, maxLength: 24},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
         properties: {
           success: {type: 'boolean'},
-          message: {type: 'string'},
+          data: playTrackerObject,
         },
       },
     },
@@ -100,18 +123,6 @@ export const AnswerReqOpts: RouteShorthandOptions = {
           data: playTrackerObject,
         },
       },
-      404: {
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
-      409: {
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
     },
   },
 };
@@ -144,18 +155,6 @@ export const FinishReqOpts: RouteShorthandOptions = {
             type: 'object',
             properties: {...playTrackerObject.properties, score: {type: 'number'}},
           },
-        },
-      },
-      404: {
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
-      409: {
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
         },
       },
     },

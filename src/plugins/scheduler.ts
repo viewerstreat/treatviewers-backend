@@ -6,21 +6,28 @@ import {AsyncTask, SimpleIntervalJob} from 'toad-scheduler';
 import {ContestSchema, CONTEST_STATUS, PRIZE_SELECTION} from '../models/contest';
 import {
   COLL_CONTESTS,
+  COLL_OTPS,
   COLL_PLAY_TRACKERS,
+  COLL_USED_TOKENS,
   COLL_USERS,
   COLL_WALLETS,
   COLL_WALLET_TRANSACTIONS,
 } from '../utils/constants';
 import {PlayTrackerSchema, PLAY_STATUS} from '../models/playTracker';
 import {FastifyInstance} from 'fastify';
-import {SCHEDULER_INTERVAL, TRANSACTION_OPTS} from '../utils/config';
+import {
+  CLEANUP_INTERVAL,
+  SCHEDULER_INTERVAL,
+  TOKEN_CLEANUP_DRURATION,
+  TRANSACTION_OPTS,
+} from '../utils/config';
 import {
   TRANSACTION_STATUS,
   WalletSchema,
   WalletTransactionSchema,
   WALLET_TRANSACTION_TYPE,
 } from '../models/wallet';
-import {UserSchema} from '../models/user';
+import {OtpSchema, UsedTokenSchema, UserSchema} from '../models/user';
 
 const TASK_ID = 'SCHEDULER_TASK';
 const FETCH_LIMIT = 10;
@@ -212,11 +219,34 @@ export default fp(async (fastify, opts) => {
     fastify.log.error(err);
   };
 
+  // handler function for the async task
+  // finds all eligible contests
+  // finish all contests
+  const cleanUpTaskHandler = async () => {
+    fastify.log.info('cleanup taskHandler called...');
+    const collOtp = fastify.mongo.db?.collection<OtpSchema>(COLL_OTPS);
+    const collToken = fastify.mongo.db?.collection<UsedTokenSchema>(COLL_USED_TOKENS);
+    const cutOff = fastify.getCurrentTimestamp() - TOKEN_CLEANUP_DRURATION * 24 * 3600 * 1000;
+    await collOtp?.deleteMany({validTill: {$lt: cutOff}});
+    await collToken?.deleteMany({updateTs: {$lt: cutOff}});
+  };
+
+  // error handler function for the async task
+  const cleanupErrorHandler = (err: Error) => {
+    fastify.log.error('Error in cleanup jon...');
+    fastify.log.error(err);
+  };
+
   const task = new AsyncTask(TASK_ID, taskHandler, errorHandler);
   const job = new SimpleIntervalJob({seconds: SCHEDULER_INTERVAL}, task);
+
+  const cleanupTask = new AsyncTask(TASK_ID, cleanUpTaskHandler, cleanupErrorHandler);
+  const cleanupJob = new SimpleIntervalJob({hours: CLEANUP_INTERVAL}, cleanupTask);
+
   fastify.register(FastifySchedule);
   fastify.ready().then(() => {
     fastify.scheduler.addSimpleIntervalJob(job);
+    fastify.scheduler.addSimpleIntervalJob(cleanupJob);
   });
 });
 
