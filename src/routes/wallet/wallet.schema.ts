@@ -1,4 +1,5 @@
 import {RouteShorthandOptions} from 'fastify';
+import {playTrackerObject} from '../playTracker/playTracker.schema';
 
 export const GetWalletBalOpts: RouteShorthandOptions = {
   schema: {
@@ -136,7 +137,7 @@ export const PayContestOpts: RouteShorthandOptions = {
       200: {
         properties: {
           success: {type: 'boolean'},
-          message: {type: 'string'},
+          data: playTrackerObject,
         },
       },
     },

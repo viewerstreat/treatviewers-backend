@@ -208,7 +208,7 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
     return reply.notFound('contest not found');
   }
   // check if the playTracker exists for the userId and contestId
-  const playTracker = await collPlayTracker?.findOne({contestId, userId});
+  let playTracker = await collPlayTracker?.findOne({contestId, userId});
   if (playTracker && playTracker.status === PLAY_STATUS.FINISHED) {
     return reply.badRequest('contest already finished for user');
   }
@@ -277,7 +277,7 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
         throw new Error('not able to insert into walletTransaction');
       }
       // update the playTracker to PAID
-      const updtRslt = await collPlayTracker?.updateOne(
+      const updtRslt = await collPlayTracker?.findOneAndUpdate(
         {contestId, userId},
         {
           $set: {
@@ -287,20 +287,24 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
             updatedTs,
           },
         },
-        {session, upsert: false},
+        {
+          session,
+          upsert: false,
+          returnDocument: 'after',
+        },
       );
+
       // check if the update operation failed
-      const modifiedCount = updtRslt?.modifiedCount || 0;
-      if (modifiedCount !== 1) {
+      if (!updtRslt?.ok) {
         throw new Error('not able to update playTracker');
       }
+      playTracker = updtRslt.value;
     }, TRANSACTION_OPTS);
     if (!transactionResult) {
-      reply.status(409).send({success: false, message: 'Unknown error occurred'});
-      return;
+      return reply.internalServerError('Unknown error occurred');
     }
     // return success reponse
-    return {success: true, message: 'Updated successfully'};
+    return {success: true, data: playTracker};
   } catch (err: any) {
     request.log.error(err);
     reply.internalServerError(err.toString());

@@ -1,6 +1,6 @@
 import {RouteShorthandOptions} from 'fastify';
 
-const playTrackerObject = {
+export const playTrackerObject = {
   type: 'object',
   properties: {
     userId: {type: 'number'},
