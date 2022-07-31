@@ -8,6 +8,7 @@ export const playTrackerObject = {
     contestId: {type: 'string'},
     status: {type: 'string'},
     startTs: {type: 'number'},
+    finishTs: {type: 'number'},
     currQuestionNo: {type: 'number'},
     totalQuestions: {type: 'number'},
     totalAnswered: {type: 'number'},
