@@ -1,4 +1,5 @@
 import {RouteShorthandOptions} from 'fastify';
+import {quesResObject} from '../question/question.schema';
 
 export const playTrackerObject = {
   type: 'object',
@@ -6,13 +7,11 @@ export const playTrackerObject = {
     userId: {type: 'number'},
     contestId: {type: 'string'},
     status: {type: 'string'},
-    walletTransactionId: {type: 'string'},
-    initTs: {type: 'number'},
-    paidTs: {type: 'number'},
     startTs: {type: 'number'},
     currQuestionNo: {type: 'number'},
     totalQuestions: {type: 'number'},
     totalAnswered: {type: 'number'},
+    score: {type: 'number'},
   },
 };
 
@@ -82,6 +81,7 @@ export const PlayStartReqOpts: RouteShorthandOptions = {
         properties: {
           success: {type: 'boolean'},
           data: playTrackerObject,
+          question: quesResObject,
         },
       },
     },
@@ -121,6 +121,7 @@ export const AnswerReqOpts: RouteShorthandOptions = {
         properties: {
           success: {type: 'boolean'},
           data: playTrackerObject,
+          question: quesResObject,
         },
       },
     },
@@ -151,10 +152,7 @@ export const FinishReqOpts: RouteShorthandOptions = {
         type: 'object',
         properties: {
           success: {type: 'boolean'},
-          data: {
-            type: 'object',
-            properties: {...playTrackerObject.properties, score: {type: 'number'}},
-          },
+          data: playTrackerObject,
         },
       },
     },

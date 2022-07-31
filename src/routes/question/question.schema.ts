@@ -28,6 +28,25 @@ const questionTypeObject = {
   },
 };
 
+export const quesResObject = {
+  type: 'object',
+  properties: {
+    contestId: {type: 'string'},
+    questionNo: {type: 'number'},
+    questionText: {type: 'string'},
+    options: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          optionId: {type: 'number'},
+          optionText: {type: 'string'},
+        },
+      },
+    },
+  },
+};
+
 export interface GetQuestionRequest {
   Headers: {
     authorization: string;
@@ -61,31 +80,7 @@ export const GetQuestionRequestOpts: RouteShorthandOptions = {
         type: 'object',
         properties: {
           success: {type: 'boolean'},
-          data: {
-            type: 'object',
-            properties: {
-              contestId: {type: 'string'},
-              questionNo: {type: 'number'},
-              questionText: {type: 'string'},
-              options: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    optionId: {type: 'number'},
-                    optionText: {type: 'string'},
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      404: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
+          data: questionTypeObject,
         },
       },
     },
@@ -123,31 +118,7 @@ export const GetNxtQuesReqOpts: RouteShorthandOptions = {
         type: 'object',
         properties: {
           success: {type: 'boolean'},
-          data: {
-            type: 'object',
-            properties: {
-              contestId: {type: 'string'},
-              questionNo: {type: 'number'},
-              questionText: {type: 'string'},
-              options: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    optionId: {type: 'number'},
-                    optionText: {type: 'string'},
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-      404: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
+          data: quesResObject,
         },
       },
     },
@@ -179,13 +150,6 @@ export const CreateQuestionRequestOpts: RouteShorthandOptions = {
     body: questionTypeObject,
     response: {
       200: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
-      400: {
         type: 'object',
         properties: {
           success: {type: 'boolean'},

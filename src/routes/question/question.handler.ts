@@ -11,8 +11,7 @@ type CrtQsFstReq = FastifyRequest<CreateQuestionRequest>;
 export const createQuestionHandler = async (request: CrtQsFstReq, reply: FastifyReply) => {
   // options must have one correct answer
   if (request.body.options.filter((el) => el.isCorrect).length !== 1) {
-    reply.status(400).send({success: false, message: `Options must have one correct answer`});
-    return;
+    return reply.badRequest('Options must have one correct answer');
   }
 
   // options should not have duplicate optionId
@@ -20,8 +19,7 @@ export const createQuestionHandler = async (request: CrtQsFstReq, reply: Fastify
     const optionIds = request.body.options.map((el) => el.optionId);
     const duplicates = optionIds.filter((el, idx) => optionIds.indexOf(el) !== idx);
     if (duplicates.length > 0) {
-      reply.status(400).send({success: false, message: `Duplicate optionId`});
-      return;
+      return reply.badRequest('Duplicate optionId');
     }
   }
 
@@ -35,10 +33,7 @@ export const createQuestionHandler = async (request: CrtQsFstReq, reply: Fastify
   };
   const constest = await collContest?.findOne(findBy);
   if (!constest) {
-    reply
-      .status(400)
-      .send({success: false, message: `Not a valid contestId: ${request.body.contestId}`});
-    return;
+    return reply.badRequest(`Not a valid contestId: ${request.body.contestId}`);
   }
   const doc: QuestionSchema = {
     contestId,
@@ -68,11 +63,9 @@ export const getQuestionHandler = async (request: GetQsFstReq, reply: FastifyRep
   const collQues = request.mongo.db?.collection<QuestionSchema>(COLL_QUESTIONS);
   const result = await collQues?.findOne(findBy);
   if (!result) {
-    reply.status(404).send({
-      success: false,
-      message: `Question not found with contestId: ${request.query.contestId}, questionNo: ${request.query.questionNo}`,
-    });
-    return;
+    return reply.badRequest(
+      `Question not found with contestId: ${request.query.contestId}, questionNo: ${request.query.questionNo}`,
+    );
   }
   return {success: true, data: result};
 };
@@ -85,8 +78,7 @@ export const getNxtQuesHandler = async (request: GetNxtQFstReq, reply: FastifyRe
     userId: request.user.id,
   });
   if (!playTrackers) {
-    reply.status(404).send({success: true, message: 'Play Tracker not found'});
-    return;
+    return reply.notFound('Play Tracker not found');
   }
   // generate the findBy query
   const findBy: Filter<QuestionSchema> = {
@@ -98,11 +90,7 @@ export const getNxtQuesHandler = async (request: GetNxtQFstReq, reply: FastifyRe
   const collQues = request.mongo.db?.collection<QuestionSchema>(COLL_QUESTIONS);
   const result = await collQues?.find(findBy).sort(sortBy).limit(1).toArray();
   if (!result || result.length === 0) {
-    reply.status(404).send({
-      success: false,
-      message: 'No question found',
-    });
-    return;
+    return reply.notFound('No question found');
   }
   return {success: true, data: result[0]};
 };

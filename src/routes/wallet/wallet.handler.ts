@@ -224,6 +224,8 @@ export const payContestHandler = async (request: PayContestFstReq, reply: Fastif
       contestId,
       userId,
       status: PLAY_STATUS.INIT,
+      totalQuestions: contest.questionCount,
+      totalAnswered: 0,
       initTs: currTime,
       createdTs: currTime,
     });

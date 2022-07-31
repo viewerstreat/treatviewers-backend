@@ -1,5 +1,5 @@
 import {ObjectId} from '@fastify/mongodb';
-import {Filter, UpdateFilter} from 'mongodb';
+import {Filter, UpdateFilter, Sort} from 'mongodb';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {ContestSchema, CONTEST_STATUS} from '../../models/contest';
 import {Answer, PlayTrackerSchema, PLAY_STATUS} from '../../models/playTracker';
@@ -65,6 +65,7 @@ type StrPlFstReq = FastifyRequest<PlayStartReq>;
 export const startPlayHandler = async (request: StrPlFstReq, reply: FastifyReply) => {
   const collContest = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
   const collPlayTracker = request.mongo.db?.collection<PlayTrackerSchema>(COLL_PLAY_TRACKERS);
+  const collQues = request.mongo.db?.collection<QuestionSchema>(COLL_QUESTIONS);
   const userId = request.user.id;
   const {contestId} = request.body;
   const currTs = request.getCurrentTimestamp();
@@ -102,19 +103,40 @@ export const startPlayHandler = async (request: StrPlFstReq, reply: FastifyReply
     return reply.badRequest('contest is not paid yet');
   }
 
+  // update the playtracker object with resumeTs or startTs according to status
   const update: UpdateFilter<PlayTrackerSchema> = {};
   if (playTracker.status === PLAY_STATUS.STARTED) {
     update.$push = {resumeTs: currTs};
   }
   if (playTracker.status === PLAY_STATUS.INIT || playTracker.status === PLAY_STATUS.PAID) {
-    update.$set = {startTs: currTs, status: PLAY_STATUS.STARTED};
+    update.$set = {startTs: currTs, status: PLAY_STATUS.STARTED, currQuestionNo: 0};
   }
   update.$set = {...update.$set, updatedTs: currTs};
   const result = await collPlayTracker?.findOneAndUpdate({contestId, userId}, update, {
     returnDocument: 'after',
     upsert: false,
   });
-  return {success: true, data: result?.value};
+  // if unable to update play tracker then return error
+  const data = result?.value;
+  if (!data) {
+    return reply.internalServerError('invalid play tracker');
+  }
+  // query to find the question for the play tracker
+  const findBy: Filter<QuestionSchema> = {
+    contestId,
+    questionNo: {$gt: data.currQuestionNo},
+    isActive: true,
+  };
+  const sortBy: Sort = {questionNo: 1};
+  const qRes = await collQues?.find(findBy).sort(sortBy).limit(1).toArray();
+  // if question is not found then return error
+  if (!qRes || qRes.length < 1) {
+    return reply.internalServerError('Question not found');
+  }
+  // question object to return in the response
+  const question = qRes[0];
+  // return successful response
+  return {success: true, data, question};
 };
 
 // handler function for saving answer given by the user
@@ -174,6 +196,8 @@ export const answerHandler = async (request: AnsFstReq, reply: FastifyReply) => 
     correctOption?.length > 0 && correctOption[0].optionId === request.body.selectedOptionId
       ? 1
       : 0;
+  const totalAnswered = (playTracker.totalAnswered || 0) + 1;
+  const isFinished = (playTracker.totalQuestions || 0) === totalAnswered;
   // create the answer schema
   const ans: Answer = {
     questionNo: request.body.questionNo,
@@ -181,18 +205,44 @@ export const answerHandler = async (request: AnsFstReq, reply: FastifyReply) => 
     options: question.options || [],
     selectedOptionId: request.body.selectedOptionId,
   };
+  const update: UpdateFilter<PlayTrackerSchema> = {
+    $addToSet: {answers: ans},
+    $inc: {currQuestionNo: 1, totalAnswered: 1, score},
+    $set: {updatedTs: currTs},
+  };
+  if (isFinished) {
+    update.$set = {...update.$set, finishTs: currTs, status: PLAY_STATUS.FINISHED};
+  }
   // update the playTracker document
-  const result = await collPlayTracker?.findOneAndUpdate(
-    filterPlayTrk,
-    {
-      $addToSet: {answers: ans},
-      $inc: {currQuestionNo: 1, totalAnswered: 1, score},
-      $set: {updatedTs: currTs},
-    },
-    {returnDocument: 'after', upsert: false},
-  );
+  const result = await collPlayTracker?.findOneAndUpdate(filterPlayTrk, update, {
+    returnDocument: 'after',
+    upsert: false,
+  });
+  // if unable to update play tracker then return error
+  const data = result?.value;
+  if (!data || !data.currQuestionNo) {
+    return reply.internalServerError('invalid play tracker');
+  }
+  // if finished already then return response
+  if (isFinished) {
+    return {success: true, data};
+  }
 
-  return {success: true, data: result?.value};
+  // query to find the question for the play tracker
+  const findBy: Filter<QuestionSchema> = {
+    contestId,
+    questionNo: {$gt: data.currQuestionNo},
+    isActive: true,
+  };
+  const sortBy: Sort = {questionNo: 1};
+  const qRes = await collQues?.find(findBy).sort(sortBy).limit(1).toArray();
+  // if question is not found then return error
+  if (!qRes || qRes.length < 1) {
+    return reply.internalServerError('Question not found');
+  }
+
+  // return successful response
+  return {success: true, data, question: qRes[0]};
 };
 
 // handler function for finish quiz
