@@ -1,5 +1,5 @@
 import {RouteShorthandOptions} from 'fastify';
-import {quesResObject} from '../question/question.schema';
+import {optionTypeObject, quesResObject} from '../question/question.schema';
 
 export const playTrackerObject = {
   type: 'object',
@@ -13,6 +13,18 @@ export const playTrackerObject = {
     totalQuestions: {type: 'number'},
     totalAnswered: {type: 'number'},
     score: {type: 'number'},
+    answers: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          questionNo: {type: 'number'},
+          questionText: {type: 'string'},
+          options: {type: 'array', items: optionTypeObject},
+          selectedOptionId: {type: 'number'},
+        },
+      },
+    },
   },
 };
 

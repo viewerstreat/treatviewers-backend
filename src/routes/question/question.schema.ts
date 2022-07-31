@@ -1,7 +1,7 @@
 import {RouteShorthandOptions} from 'fastify';
 import {Option} from '../../models/question';
 
-const optionTypeObject = {
+export const optionTypeObject = {
   type: 'object',
   required: ['optionId', 'optionText', 'isCorrect'],
   properties: {
