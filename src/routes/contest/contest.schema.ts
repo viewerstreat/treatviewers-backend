@@ -115,9 +115,11 @@ export const CreateContestRequestOpts: RouteShorthandOptions = {
       properties: {
         title: {type: 'string', minLength: 1, maxLength: 100},
         category: {enum: ['movie', 'others']},
-        movieId: {type: 'string', minLength: 24, maxLength: 24, nullable: true},
+        movieId: {
+          anyOf: [{type: 'string', minLength: 24, maxLength: 24, nullable: true}, {const: ''}],
+        },
         sponsoredBy: {type: 'string', minLength: 1},
-        sponsoredByLogo: {type: 'string', format: 'uri'},
+        sponsoredByLogo: {anyOf: [{type: 'string', format: 'uri', nullable: true}, {const: ''}]},
         bannerImageUrl: {type: 'string', format: 'uri'},
         videoUrl: {type: 'string', format: 'uri'},
         entryFee: {type: 'number', minimum: 0},

@@ -41,7 +41,7 @@ export const createContestHandler = async (request: CrtCntstFstReq, reply: Fasti
   }
   if (
     prizeSelection === PRIZE_SELECTION.RATIO_BASED &&
-    (!prizeRatioNumerator || !prizeRatioDenominator || prizeRatioNumerator < prizeRatioDenominator)
+    (!prizeRatioNumerator || !prizeRatioDenominator || prizeRatioNumerator > prizeRatioDenominator)
   ) {
     return reply.badRequest('prizeRatioNumerator & prizeRatioDenominator invalid');
   }
