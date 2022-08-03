@@ -18,14 +18,12 @@ export const createContestHandler = async (request: CrtCntstFstReq, reply: Fasti
   const {category, movieId} = request.body;
   if (category === CONTEST_CATEGORY.MOVIE) {
     if (!movieId) {
-      reply.status(400).send({success: false, message: 'movieId is required'});
-      return;
+      return reply.badRequest('movieId is required');
     }
     const collMovie = request.mongo.db?.collection<MovieSchema>(COLL_MOVIES);
     const movie = await collMovie?.findOne({_id: new ObjectId(movieId), isActive: true});
     if (!movie) {
-      reply.status(400).send({success: false, message: 'movieId must be valid'});
-      return;
+      return reply.badRequest('movieId must be valid');
     }
   }
   const {
@@ -39,17 +37,13 @@ export const createContestHandler = async (request: CrtCntstFstReq, reply: Fasti
   } = request.body;
   // validate prizeSelection
   if (prizeSelection === PRIZE_SELECTION.TOP_WINNERS && !topWinnersCount) {
-    reply.status(400).send({success: false, message: 'topWinnersCount is required'});
-    return;
+    return reply.badRequest('topWinnersCount is required');
   }
   if (
     prizeSelection === PRIZE_SELECTION.RATIO_BASED &&
     (!prizeRatioNumerator || !prizeRatioDenominator || prizeRatioNumerator < prizeRatioDenominator)
   ) {
-    reply
-      .status(400)
-      .send({success: false, message: 'prizeRatioNumerator & prizeRatioDenominator invalid'});
-    return;
+    return reply.badRequest('prizeRatioNumerator & prizeRatioDenominator invalid');
   }
   if (endTime <= startTime) {
     reply.status(400).send({success: false, message: 'startTime and endTime are invalid'});
@@ -87,10 +81,8 @@ export const createContestHandler = async (request: CrtCntstFstReq, reply: Fasti
   return {success: true, data};
 };
 
-export const getContestHandler = async (
-  request: FastifyRequest<GetContestRequest>,
-  reply: FastifyReply,
-) => {
+type GetContFstReq = FastifyRequest<GetContestRequest>;
+export const getContestHandler = async (request: GetContFstReq, reply: FastifyReply) => {
   // generate the findBy query
   const findBy: Filter<ContestSchema> = {};
   // filter by _id if it is passed in the query parameters
@@ -138,10 +130,7 @@ export const activateHandler = async (request: ActCntstFstReq, reply: FastifyRep
     },
   });
   if (!result?.matchedCount) {
-    reply
-      .status(404)
-      .send({success: true, message: 'contest do not exists or do not match criteria'});
-    return;
+    return reply.notFound('contest do not exists or do not match criteria');
   }
   return {success: true, message: 'Updated successfully'};
 };
@@ -161,8 +150,7 @@ export const inActivateHandler = async (request: ActCntstFstReq, reply: FastifyR
     },
   });
   if (!result?.matchedCount) {
-    reply.status(404).send({success: true, message: 'contest not found or criteria not met'});
-    return;
+    return reply.notFound('contest not found or criteria not met');
   }
   return {success: true, message: 'Updated successfully'};
 };

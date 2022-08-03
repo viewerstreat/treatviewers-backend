@@ -61,13 +61,6 @@ export const GetContestRequestOpts: RouteShorthandOptions = {
           },
         },
       },
-      404: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
     },
   },
 };
@@ -145,13 +138,6 @@ export const CreateContestRequestOpts: RouteShorthandOptions = {
           data: contestTypeObject,
         },
       },
-      400: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
     },
   },
 };
@@ -184,13 +170,6 @@ export const ActivateReqOpts: RouteShorthandOptions = {
     },
     response: {
       200: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
-      404: {
         type: 'object',
         properties: {
           success: {type: 'boolean'},
