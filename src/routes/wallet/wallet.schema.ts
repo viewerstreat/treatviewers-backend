@@ -150,6 +150,7 @@ export interface WithdrawBalInitReq {
   };
   Body: {
     amount: number;
+    receiverUpiId: string;
   };
 }
 
@@ -165,9 +166,10 @@ export const WithdrawBalInitOpts: RouteShorthandOptions = {
     },
     body: {
       type: 'object',
-      required: ['amount'],
+      required: ['amount', 'receiverUpiId'],
       properties: {
         amount: {type: 'number', minimum: 1, multipleOf: 1},
+        receiverUpiId: {type: 'string', minLength: 1},
       },
     },
     response: {

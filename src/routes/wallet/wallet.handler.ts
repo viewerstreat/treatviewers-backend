@@ -331,7 +331,8 @@ export const withdrawBalInitHandler = async (request: WthDrwBalFst, reply: Fasti
     transactionType: WALLET_TRANSACTION_TYPE.WITHDRAW,
     status: TRANSACTION_STATUS.PENDING,
   };
-  const rs = coll?.findOne(filter);
+  const rs = await coll?.findOne(filter);
+
   if (rs) {
     return reply.badRequest('Already a pending withdraw request exists');
   }
@@ -349,6 +350,7 @@ export const withdrawBalInitHandler = async (request: WthDrwBalFst, reply: Fasti
     transactionType: WALLET_TRANSACTION_TYPE.WITHDRAW,
     amount,
     balanceBefore: balance,
+    receiverUpiId: request.body.receiverUpiId,
     status: TRANSACTION_STATUS.PENDING,
     createdTs: request.getCurrentTimestamp(),
   };

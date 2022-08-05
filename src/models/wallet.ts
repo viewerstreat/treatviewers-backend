@@ -28,6 +28,7 @@ export interface WalletTransactionSchema {
   balanceAfter?: number;
   trackingId?: string;
   remarks?: string;
+  receiverUpiId?: string;
   createdTs?: number;
   updatedTs?: number;
 }
