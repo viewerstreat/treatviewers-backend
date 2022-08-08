@@ -149,13 +149,6 @@ export const GetMovieDetailReqOpts: RouteShorthandOptions = {
           data: movieTypeObject,
         },
       },
-      404: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
     },
   },
 };
@@ -188,13 +181,6 @@ export const AddViewReqOpts: RouteShorthandOptions = {
     },
     response: {
       200: {
-        type: 'object',
-        properties: {
-          success: {type: 'boolean'},
-          message: {type: 'string'},
-        },
-      },
-      404: {
         type: 'object',
         properties: {
           success: {type: 'boolean'},

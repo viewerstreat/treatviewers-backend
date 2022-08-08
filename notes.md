@@ -7,6 +7,7 @@
 - Create index on `movieViews` collection on `userId` and `movieId` (composite key, unique).
 - Create index on `wallets` collection on `userId` field `unique`.
 - Create index on `playTrackers` collection on `userId` and `contestId` (composite key, unique)
+- Create index on `clipViews` collection on `userId` and `clipId` (composite key, unique).
 
 # playTracker (post)
 

@@ -1,14 +1,13 @@
 import {ObjectId} from '@fastify/mongodb';
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {Filter, Sort} from 'mongodb';
-import {ClipSchema} from '../../models/clip';
-import {COLL_CLIPS} from '../../utils/constants';
-import {CreateClipRequest, GetClipRequest} from './clip.schema';
+import {ClipSchema, ClipViewSchema} from '../../models/clip';
+import {FavouriteSchema, MEDIA_TYPE} from '../../models/movie';
+import {COLL_CLIPS, COLL_CLIP_VIEWS, COLL_FAVOURITES} from '../../utils/constants';
+import {AddViewRequest, CreateClipRequest, GetClipRequest} from './clip.schema';
 
-export const createClipHandler = async (
-  request: FastifyRequest<CreateClipRequest>,
-  reply: FastifyReply,
-) => {
+type CrtClpFst = FastifyRequest<CreateClipRequest>;
+export const createClipHandler = async (request: CrtClpFst, reply: FastifyReply) => {
   const collection = request.mongo.db?.collection<ClipSchema>(COLL_CLIPS);
   const doc: ClipSchema = {
     name: request.body.name,
@@ -29,10 +28,8 @@ export const createClipHandler = async (
   return {success: true, data};
 };
 
-export const getClipHandler = async (
-  request: FastifyRequest<GetClipRequest>,
-  reply: FastifyReply,
-) => {
+type GetClipFst = FastifyRequest<GetClipRequest>;
+export const getClipHandler = async (request: GetClipFst, reply: FastifyReply) => {
   // generate the findBy query
   const findBy: Filter<ClipSchema> = {isActive: true};
   // filter by _id if it is passed in the query parameters
@@ -50,5 +47,53 @@ export const getClipHandler = async (
     .limit(pageSize)
     .sort(sortBy)
     .toArray();
+
+  const {authorization} = request.headers;
+  if (authorization) {
+    const splitted = authorization.split(' ');
+    if (splitted.length === 2) {
+      const userId = request.getUserIdFromToken(splitted[1]);
+      if (userId && result) {
+        const clipIds = result.map((e) => e._id.toString());
+        const collFav = request.mongo.db?.collection<FavouriteSchema>(COLL_FAVOURITES);
+        const filter: Filter<FavouriteSchema> = {
+          mediaType: MEDIA_TYPE.CLIP,
+          mediaId: {$in: clipIds},
+          userId,
+          isRemoved: false,
+        };
+        const favResult = await collFav?.find(filter).toArray();
+        result.forEach((el) => {
+          const clipId = el._id.toString();
+          const v = favResult?.find((elem) => elem.mediaId === clipId);
+          el.isLikedByMe = !!v;
+        });
+      }
+    }
+  }
+
   return {success: true, data: result};
+};
+
+type AdVwFstReq = FastifyRequest<AddViewRequest>;
+export const addClipViewHandler = async (request: AdVwFstReq, reply: FastifyReply) => {
+  const collClip = request.mongo.db?.collection<ClipSchema>(COLL_CLIPS);
+  const coll = request.mongo.db?.collection<ClipViewSchema>(COLL_CLIP_VIEWS);
+  const {clipId} = request.body;
+  const userId = request.user.id;
+  const clipFilter: Filter<ClipSchema> = {_id: new ObjectId(clipId)};
+  const viewFilter: Filter<ClipViewSchema> = {clipId, userId};
+  const [clip, clipView] = await Promise.all([
+    collClip?.findOne(clipFilter),
+    coll?.findOne(viewFilter),
+  ]);
+  if (!clip) {
+    return reply.notFound('Clip not found');
+  }
+  const updatedTs = request.getCurrentTimestamp();
+  if (!clipView) {
+    collClip?.updateOne(clipFilter, {$inc: {viewCount: 1}, $set: {updatedTs}});
+  }
+  await coll?.findOneAndUpdate(viewFilter, {$set: {clipId, userId, updatedTs}}, {upsert: true});
+  return {success: true, message: 'Updated successfully'};
 };

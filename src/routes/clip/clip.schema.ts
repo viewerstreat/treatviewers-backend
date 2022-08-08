@@ -10,6 +10,7 @@ const clipTypeObject = {
     bannerImageUrl: {type: 'string'},
     viewCount: {type: 'number'},
     likeCount: {type: 'number'},
+    isLikedByMe: {type: 'boolean'},
     isActive: {type: 'boolean'},
   },
 };
@@ -87,6 +88,44 @@ export const CreateClipRequestOpts: RouteShorthandOptions = {
         properties: {
           success: {type: 'boolean'},
           data: clipTypeObject,
+        },
+      },
+    },
+  },
+};
+
+export interface AddViewRequest {
+  Headers: {
+    authorization: string;
+  };
+  Body: {
+    clipId: string;
+  };
+}
+
+export const AddViewReqOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'Add View Count for clip. Authorization is required.',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
+    body: {
+      type: 'object',
+      required: ['clipId'],
+      properties: {
+        clipId: {type: 'string', minLength: 24, maxLength: 24},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
         },
       },
     },

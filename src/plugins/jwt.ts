@@ -61,6 +61,15 @@ export default fp(async (fastify, opts) => {
     }
   });
 
+  fastify.decorate('getUserIdFromToken', (token: string): number => {
+    try {
+      const data = fastify.jwt.decode<{id: number}>(token);
+      return data?.id || 0;
+    } catch (err) {
+      return 0;
+    }
+  });
+
   // onRequest hook
   fastify.addHook('onRequest', async (request, reply) => {
     const {routerPath, method} = request;
@@ -77,6 +86,7 @@ export default fp(async (fastify, opts) => {
     request.generateToken = fastify.generateToken;
     request.generateRefreshToken = fastify.generateRefreshToken;
     request.validateRefreshToken = fastify.validateRefreshToken;
+    request.getUserIdFromToken = fastify.getUserIdFromToken;
     done();
   });
 });
@@ -87,11 +97,13 @@ declare module 'fastify' {
     generateToken(id: number, name?: string): string;
     generateRefreshToken(id: number): string;
     validateRefreshToken(refreshToken: string): number;
+    getUserIdFromToken(token: string): number;
   }
   export interface FastifyInstance {
     authenticate(request: FastifyRequest, reply: FastifyReply): Promise<void>;
     generateToken(id: number, name?: string): string;
     generateRefreshToken(id: number): string;
     validateRefreshToken(refreshToken: string): number;
+    getUserIdFromToken(token: string): number;
   }
 }

@@ -1,6 +1,8 @@
 import {FastifyPluginAsync} from 'fastify';
-import {createClipHandler, getClipHandler} from './clip.handler';
+import {addClipViewHandler, createClipHandler, getClipHandler} from './clip.handler';
 import {
+  AddViewReqOpts,
+  AddViewRequest,
   CreateClipRequest,
   CreateClipRequestOpts,
   GetClipRequest,
@@ -13,6 +15,9 @@ const clipRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   // get clip
   fastify.get<GetClipRequest>('/', GetClipRequestOpts, getClipHandler);
+
+  // add clip view
+  fastify.post<AddViewRequest>('/addView', AddViewReqOpts, addClipViewHandler);
 };
 
 export default clipRoute;

@@ -8,9 +8,16 @@ export interface ClipSchema {
   bannerImageUrl?: string;
   viewCount?: number;
   likeCount?: number;
+  isLikedByMe?: boolean;
   isActive?: boolean;
   createdBy?: number;
   updatedBy?: number;
   createdTs?: number;
   updatedTs?: number;
+}
+
+export interface ClipViewSchema {
+  clipId: string;
+  userId: number;
+  updatedTs: number;
 }

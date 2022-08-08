@@ -62,32 +62,6 @@ export const createMovieHandler = async (request: FastifyRequest<CreateMovieRequ
   return {success: true, data};
 };
 
-const getMovieData = async (
-  movieId: string,
-  request: FastifyRequest,
-): Promise<MovieSchema | null> => {
-  const collMovie = request.mongo.db?.collection<MovieSchema>(COLL_MOVIES);
-  const movieData = await collMovie?.findOne({_id: new ObjectId(movieId)});
-  return movieData || null;
-};
-
-const getMovieViewCount = async (movieId: string, request: FastifyRequest): Promise<number> => {
-  const coll = request.mongo.db?.collection<MovieViewSchema>(COLL_MOVIE_VIEWS);
-  const count = await coll?.countDocuments({movieId});
-  return count || 0;
-};
-
-const getMovieLikeCount = async (movieId: string, request: FastifyRequest): Promise<number> => {
-  const coll = request.mongo.db?.collection<FavouriteSchema>(COLL_FAVOURITES);
-  const filter: Filter<FavouriteSchema> = {
-    mediaId: movieId,
-    mediaType: MEDIA_TYPE.MOVIE,
-    isRemoved: false,
-  };
-  const count = await coll?.countDocuments(filter);
-  return count || 0;
-};
-
 export const isLikedByMeHandler = async (request: FastifyRequest<IsLikeByMeRequest>) => {
   const coll = request.mongo.db?.collection<FavouriteSchema>(COLL_FAVOURITES);
   const res = await coll?.findOne({
@@ -99,54 +73,36 @@ export const isLikedByMeHandler = async (request: FastifyRequest<IsLikeByMeReque
   return {success: true, isLikedByMe: !!res};
 };
 
-export const getMovieDetailHandler = async (
-  request: FastifyRequest<GetMovieDetailRequest>,
-  reply: FastifyReply,
-) => {
+type GtMvFstReq = FastifyRequest<GetMovieDetailRequest>;
+export const getMovieDetailHandler = async (request: GtMvFstReq, reply: FastifyReply) => {
   const {movieId} = request.query;
-  const [movieData, viewCount, likeCount] = await Promise.all([
-    getMovieData(movieId, request),
-    getMovieViewCount(movieId, request),
-    getMovieLikeCount(movieId, request),
-  ]);
-
+  const collMovie = request.mongo.db?.collection<MovieSchema>(COLL_MOVIES);
+  const movieData = await collMovie?.findOne({_id: new ObjectId(movieId)});
   if (!movieData) {
-    reply.status(404).send({success: false, message: 'Movie not found'});
-    return;
+    return reply.notFound('movie not found');
   }
-  movieData.viewCount = viewCount;
-  movieData.likeCount = likeCount;
   return {success: true, data: movieData};
 };
 
-export const addMovieViewHandler = async (
-  request: FastifyRequest<AddViewRequest>,
-  reply: FastifyReply,
-) => {
+type AdVwFstReq = FastifyRequest<AddViewRequest>;
+export const addMovieViewHandler = async (request: AdVwFstReq, reply: FastifyReply) => {
   const collMovie = request.mongo.db?.collection<MovieSchema>(COLL_MOVIES);
-  const movieData = await collMovie?.findOne({
-    _id: new ObjectId(request.body.movieId),
-  });
-  if (!movieData) {
-    reply.status(404).send({success: false, message: 'Movie not found'});
-    return;
-  }
   const coll = request.mongo.db?.collection<MovieViewSchema>(COLL_MOVIE_VIEWS);
-  await coll?.findOneAndUpdate(
-    {
-      movieId: request.body.movieId,
-      userId: request.user.id,
-    },
-    {
-      $set: {
-        movieId: request.body.movieId,
-        userId: request.user.id,
-        updatedTs: request.getCurrentTimestamp(),
-      },
-    },
-    {
-      upsert: true,
-    },
-  );
+  const {movieId} = request.body;
+  const userId = request.user.id;
+  const movieFilter: Filter<MovieSchema> = {_id: new ObjectId(movieId)};
+  const viewFilter: Filter<MovieViewSchema> = {movieId, userId};
+  const [movie, movieView] = await Promise.all([
+    collMovie?.findOne(movieFilter),
+    coll?.findOne(viewFilter),
+  ]);
+  if (!movie) {
+    return reply.notFound('Movie not found');
+  }
+  const updatedTs = request.getCurrentTimestamp();
+  if (!movieView) {
+    collMovie?.updateOne(movieFilter, {$inc: {viewCount: 1}, $set: {updatedTs}});
+  }
+  await coll?.findOneAndUpdate(viewFilter, {$set: {movieId, userId, updatedTs}}, {upsert: true});
   return {success: true, message: 'Updated successfully'};
 };
