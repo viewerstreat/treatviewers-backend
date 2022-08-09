@@ -91,9 +91,11 @@ export const addClipViewHandler = async (request: AdVwFstReq, reply: FastifyRepl
     return reply.notFound('Clip not found');
   }
   const updatedTs = request.getCurrentTimestamp();
+  let viewCount = clip.viewCount || 0;
   if (!clipView) {
-    collClip?.updateOne(clipFilter, {$inc: {viewCount: 1}, $set: {updatedTs}});
+    await collClip?.updateOne(clipFilter, {$inc: {viewCount: 1}, $set: {updatedTs}});
+    viewCount += 1;
   }
   await coll?.findOneAndUpdate(viewFilter, {$set: {clipId, userId, updatedTs}}, {upsert: true});
-  return {success: true, message: 'Updated successfully'};
+  return {success: true, message: 'Updated successfully', viewCount};
 };
