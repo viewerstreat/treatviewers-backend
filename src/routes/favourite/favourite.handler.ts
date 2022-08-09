@@ -15,7 +15,7 @@ export const updateFavouriteHandler = async (request: UpdtFvFstReq, reply: Fasti
     mediaType: request.body.mediaType,
   };
   let mediaColl;
-  const filter = {_id: new ObjectId(request.body.mediaId), isActive: true};
+  const filter = {_id: new ObjectId(request.body.mediaId)};
   if (request.body.mediaType === MEDIA_TYPE.MOVIE) {
     mediaColl = request.mongo.db?.collection<MovieSchema>(COLL_MOVIES);
   } else {
@@ -76,7 +76,11 @@ export const updateFavouriteHandler = async (request: UpdtFvFstReq, reply: Fasti
 type GetFavFst = FastifyRequest<GetFavouriteRequest>;
 export const getFavouriteHandler = async (request: GetFavFst, reply: FastifyReply) => {
   const coll = request.mongo.db?.collection<FavouriteSchema>(COLL_FAVOURITES);
-  const findBy: Filter<FavouriteSchema> = {mediaType: request.query.mediaType, isRemoved: false};
+  const findBy: Filter<FavouriteSchema> = {
+    mediaType: request.query.mediaType,
+    userId: request.user.id,
+    isRemoved: false,
+  };
   const sortBy: Sort = {updatedTs: -1};
   const pageNo = request.query.pageIndex || 0;
   const pageSize = request.query.pageSize || request.getDefaultPageSize();
