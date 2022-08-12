@@ -100,9 +100,11 @@ export const addMovieViewHandler = async (request: AdVwFstReq, reply: FastifyRep
     return reply.notFound('Movie not found');
   }
   const updatedTs = request.getCurrentTimestamp();
+  let viewCount = movie.viewCount || 0;
   if (!movieView) {
     collMovie?.updateOne(movieFilter, {$inc: {viewCount: 1}, $set: {updatedTs}});
+    viewCount += 1;
   }
   await coll?.findOneAndUpdate(viewFilter, {$set: {movieId, userId, updatedTs}}, {upsert: true});
-  return {success: true, message: 'Updated successfully'};
+  return {success: true, message: 'Updated successfully', viewCount};
 };

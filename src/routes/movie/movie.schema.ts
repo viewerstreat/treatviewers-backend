@@ -185,6 +185,7 @@ export const AddViewReqOpts: RouteShorthandOptions = {
         properties: {
           success: {type: 'boolean'},
           message: {type: 'string'},
+          viewCount: {type: 'number'},
         },
       },
     },
