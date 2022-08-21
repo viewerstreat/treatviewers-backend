@@ -10,6 +10,7 @@ import {
   CreateUserRequest,
   LoginRequest,
   RenewTokenRequest,
+  UpdateFCMTokenReq,
   UpdateUserRequest,
   VerifyUserRequest,
 } from './user.schema';
@@ -411,4 +412,28 @@ export const loginHandler = async (request: LoginFstReq, reply: FastifyReply) =>
   // generate short lived token
   const token = data.id && request.generateToken(data.id, data.name);
   return {success: true, data, token};
+};
+
+// handler function to update the FCM token for user in the database
+// check if for the user the FCM token already exists
+// if not then push the token value to the array
+// Note: we are going to use an array to save FCM token
+// to handle the scenario that one user can login to multiple devices
+// But this could potentially leave some unused tokens saved in the database.
+type UpdtFCMFstReq = FastifyRequest<UpdateFCMTokenReq>;
+export const updateFcmTokenHandler = async (request: UpdtFCMFstReq, reply: FastifyReply) => {
+  const collUser = request.mongo.db?.collection<UserSchema>(COLL_USERS);
+  const user = await collUser?.findOne({id: request.user.id});
+  if (!user) {
+    return reply.notFound('user not found');
+  }
+  if (user.fcmTokens && user.fcmTokens.includes(request.body.token)) {
+    return {success: true, message: 'token already exists for user'};
+  }
+  await collUser?.updateOne(
+    {id: request.user.id},
+    {$push: {fcmTokens: request.body.token}, $set: {updatedTs: request.getCurrentTimestamp()}},
+    {upsert: false},
+  );
+  return {success: true, message: 'token saved successfully'};
 };

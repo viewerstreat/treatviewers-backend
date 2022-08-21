@@ -224,3 +224,37 @@ export const LoginReqOpts: RouteShorthandOptions = {
     },
   },
 };
+
+export interface UpdateFCMTokenReq {
+  Body: {
+    token: string;
+  };
+}
+
+export const UpdateFCMTokenReqOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'API to update FCM token for the user in the database',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string', minLength: 1},
+      },
+    },
+    body: {
+      type: 'object',
+      properties: {
+        name: {token: 'string', minLength: 1},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          message: {type: 'string'},
+        },
+      },
+    },
+  },
+};

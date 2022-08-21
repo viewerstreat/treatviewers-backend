@@ -21,6 +21,7 @@ export interface UserSchema {
   totalEarning?: number;
   createdTs?: number;
   updatedTs?: number;
+  fcmTokens?: string[];
 }
 
 export interface OtpSchema {

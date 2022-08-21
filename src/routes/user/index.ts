@@ -4,6 +4,7 @@ import {
   createUserHandler,
   loginHandler,
   renewTokenHandler,
+  updateFcmTokenHandler,
   updateUserHandler,
   verifyUserHandler,
 } from './user.handlers';
@@ -16,6 +17,8 @@ import {
   LoginRequest,
   RenewTokenReqOpts,
   RenewTokenRequest,
+  UpdateFCMTokenReq,
+  UpdateFCMTokenReqOpts,
   UpdateUserOpts,
   UpdateUserRequest,
   VerifyUserRequest,
@@ -40,6 +43,9 @@ const userRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   // login user
   fastify.post<LoginRequest>('/login', LoginReqOpts, loginHandler);
+
+  // update FCM token for the user
+  fastify.post<UpdateFCMTokenReq>('/updateFcmToken', UpdateFCMTokenReqOpts, updateFcmTokenHandler);
 };
 
 export default userRoute;
