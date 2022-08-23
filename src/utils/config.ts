@@ -50,17 +50,43 @@ export const AWS_REGION = 'ap-south-1';
 // AWS S3 bucket name
 export const AWS_BUCKET = 'trailsbuddy-1';
 
+// Task Id for scheduler task to finish contest
+export const CONTEST_TASK_ID = 'SCHEDULER_TASK_CONTEST';
+
+// Task Id for scheduler task to cleanup used otp & tokens
+export const CLEANUP_TASK_ID = 'SCHEDULER_TASK_CLEANUP';
+
+// Task Id for scheduler task to send out notifications
+export const NOTI_TASK_ID = 'SCHEDULER_TASK_NOTI';
+
+// Batch processing fetch limit
+export const BATCH_FETCH_LIMIT = 10;
+
 // scheduler job interval in second
 export const SCHEDULER_INTERVAL = 300;
 
 // cleanup jon interval in hours
 export const CLEANUP_INTERVAL = 24;
 
+// notification job interval in second
+export const NOTI_INTERVAL = 120;
+
 // token cleanup duration in days
 export const TOKEN_CLEANUP_DRURATION = 10;
 
 // minimum amount for balance withdrawal
 export const WITHDRAW_BAL_MIN_AMOUNT = 10;
+
+// FCM endpoint for sending push messages
+export const FCM_ENDPOINT =
+  'https://fcm.googleapis.com/v1/projects/trailsbuddy-1-3fbd5/messages:send';
+
+// PUSH noitification icon colour
+export const PUSH_ICON_COLOR = '#EA3333';
+
+// Push message logo path
+export const PUSH_MSG_LOGO_PATH =
+  'https://trailsbuddy-1.s3.ap-south-1.amazonaws.com/1657115801399-441.jpeg';
 
 interface RouteName {
   method: 'GET' | 'POST';

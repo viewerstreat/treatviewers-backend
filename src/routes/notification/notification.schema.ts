@@ -4,7 +4,7 @@ const notiTypeObject = {
   type: 'object',
   properties: {
     _id: {type: 'string'},
-    eventType: {type: 'string'},
+    eventName: {type: 'string'},
     notificationType: {type: 'string'},
     userId: {type: 'number'},
     message: {type: 'string'},

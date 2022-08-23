@@ -244,7 +244,7 @@ export const UpdateFCMTokenReqOpts: RouteShorthandOptions = {
     body: {
       type: 'object',
       properties: {
-        name: {token: 'string', minLength: 1},
+        token: {type: 'string', minLength: 1},
       },
     },
     response: {
