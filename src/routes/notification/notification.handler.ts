@@ -1,9 +1,10 @@
-import {FastifyRequest} from 'fastify';
+import {FastifyReply, FastifyRequest} from 'fastify';
 import {ObjectId} from '@fastify/mongodb';
 import {Filter, Sort} from 'mongodb';
 import {NotificationSchema} from '../../models/notification';
 import {COLL_NOTIFICATIONS} from '../../utils/constants';
 import {ClearNotiRequest, GetNotiRequest, MarkNotiReadRequest} from './notification.schema';
+import {insertPushNotiReq} from '../../utils/notiService';
 
 export const getNotiHandler = async (request: FastifyRequest<GetNotiRequest>) => {
   const findBy: Filter<NotificationSchema> = {isCleared: false, userId: request.user.id};
@@ -66,4 +67,10 @@ export const markNotiReadHandler = async (request: FastifyRequest<MarkNotiReadRe
   });
 
   return {success: true, message: 'Updated successfully'};
+};
+
+export const addTestPushMessage = async (request: FastifyRequest, reply: FastifyReply) => {
+  const userId = request.user.id;
+  await insertPushNotiReq(request, userId, 'EVENT_HELLO_PUSH');
+  return {success: true};
 };

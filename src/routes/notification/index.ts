@@ -1,5 +1,6 @@
 import {FastifyPluginAsync} from 'fastify';
 import {
+  addTestPushMessage,
   clearAllNotiHandler,
   clearNotiHandler,
   getNotiHandler,
@@ -7,6 +8,7 @@ import {
   markNotiReadHandler,
 } from './notification.handler';
 import {
+  AddTestPushReqOpts,
   ClearAllNotiReqOpts,
   ClearNotiReqOpts,
   ClearNotiRequest,
@@ -32,6 +34,9 @@ const notiRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   // mark all notification as read
   fastify.post('/markAllRead', MarkAllNotiReadReqOpts, markAllNotiReadHandler);
+
+  // insert test push message
+  fastify.post('/addTestPushMsg', AddTestPushReqOpts, addTestPushMessage);
 };
 
 export default notiRoute;

@@ -1,4 +1,4 @@
-import {FastifyInstance} from 'fastify';
+import {FastifyInstance, FastifyRequest} from 'fastify';
 import {ObjectId} from '@fastify/mongodb';
 import {JWT} from 'google-auth-library';
 import fetch from 'node-fetch';
@@ -231,4 +231,23 @@ async function updateReqError(requestId: string, message: string, fastify: Fasti
   }
 }
 
-export {handleNotification};
+// insert notification request
+async function insertPushNotiReq(
+  request: FastifyRequest,
+  userId: number,
+  eventName: string,
+  data?: {[k: string]: string | number},
+) {
+  const collNotiReq = request.mongo.db?.collection<NotiRequestSchema>(COLL_NOTI_REQ);
+  await collNotiReq?.insertOne({
+    userId,
+    eventName,
+    status: NOTI_REQ_STATUS.NEW,
+    notificationType: NOTIFICATION_TYPE.PUSH_MESSAGE,
+    data: data || {},
+    createdTs: request.getCurrentTimestamp(),
+    updatedTs: request.getCurrentTimestamp(),
+  });
+}
+
+export {handleNotification, insertPushNotiReq};

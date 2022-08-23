@@ -173,3 +173,24 @@ export const MarkAllNotiReadReqOpts: RouteShorthandOptions = {
     },
   },
 };
+
+export const AddTestPushReqOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'Mark All notification as read',
+    headers: {
+      type: 'object',
+      required: ['authorization'],
+      properties: {
+        authorization: {type: 'string'},
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+        },
+      },
+    },
+  },
+};
