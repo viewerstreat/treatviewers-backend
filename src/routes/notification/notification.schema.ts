@@ -36,7 +36,7 @@ export const GetNotiReqOpts: RouteShorthandOptions = {
       type: 'object',
       properties: {
         pageSize: {type: 'number'},
-        pageNo: {type: 'number'},
+        pageIndex: {type: 'number'},
       },
     },
     response: {
