@@ -190,7 +190,8 @@ async function sendPushMessage(msg: string, device: string, accessToken: string)
     message: {
       token: device,
       data: {
-        routePath: '/home/notifications',
+        screenName: 'Home',
+        screenParams: '{"screen": "Notifications"}',
       },
       notification: {
         body: msg,
