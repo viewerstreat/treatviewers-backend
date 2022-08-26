@@ -1,6 +1,7 @@
 import {FastifyPluginAsync} from 'fastify';
 import {
   activateHandler,
+  contestWiseResultHandler,
   createContestHandler,
   getContestHandler,
   inActivateHandler,
@@ -8,6 +9,7 @@ import {
 import {
   ActivateReqOpts,
   ActivateRequest,
+  ContestWiseResultOpts,
   CreateContestRequest,
   CreateContestRequestOpts,
   GetContestRequest,
@@ -26,6 +28,9 @@ const contestRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> =>
 
   // make contest inactive
   fastify.post<ActivateRequest>('/inActivate', ActivateReqOpts, inActivateHandler);
+
+  // get contestwise result for an user
+  fastify.get('/contestWiseResult', ContestWiseResultOpts, contestWiseResultHandler);
 };
 
 export default contestRoute;

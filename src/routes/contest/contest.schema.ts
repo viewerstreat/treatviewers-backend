@@ -181,3 +181,33 @@ export const ActivateReqOpts: RouteShorthandOptions = {
     },
   },
 };
+
+export const ContestWiseResultOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'Get Contestwise result for an user',
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          data: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                _id: {type: 'string'},
+                title: {type: 'string'},
+                rank: {type: 'number'},
+                timeTaken: {type: 'number'},
+                correctAns: {type: 'number'},
+                totalQues: {type: 'number'},
+                earning: {type: 'number'},
+                badgesWon: {type: 'boolean'},
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+};

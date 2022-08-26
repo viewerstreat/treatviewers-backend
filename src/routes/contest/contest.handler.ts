@@ -154,3 +154,33 @@ export const inActivateHandler = async (request: ActCntstFstReq, reply: FastifyR
   }
   return {success: true, message: 'Updated successfully'};
 };
+
+export const contestWiseResultHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+  const coll = request.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
+  const userId = request.user.id;
+  const result = await coll
+    ?.find({
+      status: CONTEST_STATUS.ENDED,
+      'allPlayTrackers.userId': userId,
+    })
+    .sort({updatedTs: -1})
+    .limit(10)
+    .toArray();
+
+  const data = result?.map((el) => {
+    const pt = el.allPlayTrackers?.find((e) => e.userId === userId);
+    const winner = el.winners?.find((e) => e.userId === userId);
+    const obj = {
+      _id: el._id,
+      title: el.title,
+      rank: pt?.rank,
+      timeTaken: pt?.timeTaken,
+      correctAns: pt?.score,
+      totalQues: pt?.totalQuestions,
+      earning: el.prizeValue,
+      badgesWon: !!winner,
+    };
+    return obj;
+  });
+  return {success: true, data};
+};
