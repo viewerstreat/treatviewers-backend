@@ -1,7 +1,7 @@
 import {FastifyInstance} from 'fastify';
 import {ObjectId} from '@fastify/mongodb';
-import {Filter} from 'mongodb';
-import {ContestSchema, CONTEST_STATUS, PRIZE_SELECTION} from '../models/contest';
+import {Filter, Sort} from 'mongodb';
+import {ContestSchema, CONTEST_STATUS} from '../models/contest';
 import {PlayTrackerSchema, PLAY_STATUS} from '../models/playTracker';
 import {UserSchema} from '../models/user';
 import {
@@ -17,41 +17,28 @@ import {
   COLL_WALLETS,
   COLL_WALLET_TRANSACTIONS,
 } from './constants';
-import {TRANSACTION_OPTS} from './config';
+import {BATCH_FETCH_LIMIT, TRANSACTION_OPTS} from './config';
+import {createPushForPrize, getWinnerCount, sortPlayTracker} from './contestUtils';
 
-// sort playTrackers based on score, timeTaken and start time
-const sortPlayTracker = (e1: PlayTrackerSchema, e2: PlayTrackerSchema): 1 | -1 | 0 => {
-  // score descending sort
-  const score1 = e1.score || 0;
-  const score2 = e2.score || 0;
-  if (score1 < score2) return 1;
-  if (score1 > score2) return -1;
-  // timeTaken ascending sort
-  const timeTaken1 = e1.timeTaken || 0;
-  const timeTaken2 = e2.timeTaken || 0;
-  if (timeTaken1 < timeTaken2) return -1;
-  if (timeTaken1 > timeTaken2) return 1;
-  // start time ascending sort
-  const start1 = e1.startTs || 0;
-  const start2 = e1.startTs || 0;
-  if (start1 < start2) return -1;
-  if (start1 > start2) return 1;
-  return 0;
-};
+// fetch the list of contest which are ended
+// calculate the prizes for each participants for each contest
+// mark the contest and ended
+async function checkAndFinalizeContest(fastify: FastifyInstance) {
+  const collContest = fastify.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
+  // fetch contests that are ACTIVE and endTime is already over
+  const filter: Filter<ContestSchema> = {
+    status: CONTEST_STATUS.ACTIVE,
+    endTime: {$lte: fastify.getCurrentTimestamp()},
+  };
+  // fetched in updateTs ascending order so that oldest contest updated first
+  const sort: Sort = {updatedTs: 1};
+  let contests = await collContest?.find(filter).sort(sort).limit(BATCH_FETCH_LIMIT).toArray();
+  contests = contests || [];
+  // finish contest for all eligible contests
+  await Promise.all(contests.map((c) => finishContest(c, fastify)));
+}
 
-// get total number of winners of the contest based on prize selection strategy
-// if prize selection strategy is ratio based then total count is calculated based
-// on the numerator and denominator value
-const getWinnerCount = (contest: ContestSchema, totalPlayer: number): number => {
-  if (contest.prizeSelection === PRIZE_SELECTION.TOP_WINNERS) {
-    return contest.topWinnersCount || 0;
-  }
-
-  const numerator = contest.prizeRatioNumerator || 0;
-  const denominator = contest.prizeRatioDenominator || 1;
-  return Math.round((numerator * totalPlayer) / denominator);
-};
-
+// for each ended contest calculate prize and update user's balance
 async function finishContest(contest: ContestSchema, fastify: FastifyInstance) {
   {
     // log some info for debugging purposes
@@ -82,7 +69,7 @@ async function finishContest(contest: ContestSchema, fastify: FastifyInstance) {
     }
     // get balanceBefore value
     const balanceBefore = res?.value?.balance || 0;
-    const remarks = `Credit prize value ${prizeValue}`;
+    const remarks = `Credit prize value ${prizeValue} for contest ${contest._id}`;
     // insert into walletTransaction collection
     const insertResult = await collT?.insertOne({
       userId,
@@ -100,6 +87,7 @@ async function finishContest(contest: ContestSchema, fastify: FastifyInstance) {
       const msg = `Not able to insert into walletTransactions for user: ${userId}, amount: ${prizeValue}`;
       throw new Error(msg);
     }
+    await createPushForPrize(userId, prizeValue, contest.title || '', fastify);
   };
 
   // withTransaction function
@@ -133,8 +121,10 @@ async function finishContest(contest: ContestSchema, fastify: FastifyInstance) {
 
     // credit prize value to wallet
     const prizeValue = contest.prizeValue || 0;
-    const allPromises = winners.map((e) => creditPrizeValue(e.userId, prizeValue));
-    await Promise.all(allPromises);
+    if (prizeValue > 0) {
+      const allPromises = winners.map((e) => creditPrizeValue(e.userId, prizeValue));
+      await Promise.all(allPromises);
+    }
 
     // update all playTrackers status = ENDED
     await collPT?.updateMany(filter, {$set: {status: PLAY_STATUS.ENDED, updatedTs}}, {session});
@@ -167,6 +157,7 @@ async function finishContest(contest: ContestSchema, fastify: FastifyInstance) {
       {session},
     );
   };
+
   try {
     const result = await session.withTransaction(withTransactionCallback, TRANSACTION_OPTS);
     if (!result) {
@@ -180,4 +171,27 @@ async function finishContest(contest: ContestSchema, fastify: FastifyInstance) {
   }
 }
 
-export {finishContest};
+export {finishContest, checkAndFinalizeContest};
+
+/**
+ *
+ * Leaderboard (Unauthenticated API)
+ * fetch from users collection
+ * where totalPlayed > 0
+ * sort by
+ * totalEarning desc
+ * contestWon desc
+ * totalPlayed desc
+ * name asc
+ *
+ *
+ */
+
+/**
+ * Your results (authenticated API)
+ * fetch from contest collection
+ * where status = ENDED
+ * and allPlayTrackers.userId = userId
+ * sort by updatedTs desc
+ *
+ */

@@ -17,3 +17,5 @@ export const COLL_NOTI_REQ = 'notificationRequests';
 export const COLL_NOTI_CONTENT = 'notificationContents';
 
 export const USER_ID_SEQ = 'USER_ID_SEQ';
+
+export const EVENT_CREDIT_PRIZE = 'EVENT_CREDIT_PRIZE';

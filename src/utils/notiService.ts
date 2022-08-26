@@ -251,4 +251,22 @@ async function insertPushNotiReq(
   });
 }
 
-export {handleNotification, insertPushNotiReq};
+async function createPushReq(
+  fastify: FastifyInstance,
+  userId: number,
+  eventName: string,
+  data?: {[k: string]: string | number},
+) {
+  const collNotiReq = fastify.mongo.db?.collection<NotiRequestSchema>(COLL_NOTI_REQ);
+  await collNotiReq?.insertOne({
+    userId,
+    eventName,
+    status: NOTI_REQ_STATUS.NEW,
+    notificationType: NOTIFICATION_TYPE.PUSH_MESSAGE,
+    data: data || {},
+    createdTs: fastify.getCurrentTimestamp(),
+    updatedTs: fastify.getCurrentTimestamp(),
+  });
+}
+
+export {handleNotification, insertPushNotiReq, createPushReq};

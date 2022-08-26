@@ -1,11 +1,8 @@
 import fp from 'fastify-plugin';
-import {Filter, Sort} from 'mongodb';
 import FastifySchedule from '@fastify/schedule';
 import {AsyncTask, SimpleIntervalJob} from 'toad-scheduler';
-import {ContestSchema, CONTEST_STATUS} from '../models/contest';
-import {COLL_CONTESTS, COLL_OTPS, COLL_USED_TOKENS} from '../utils/constants';
+import {COLL_OTPS, COLL_USED_TOKENS} from '../utils/constants';
 import {
-  BATCH_FETCH_LIMIT,
   CLEANUP_INTERVAL,
   CLEANUP_TASK_ID,
   CONTEST_TASK_ID,
@@ -15,7 +12,7 @@ import {
   TOKEN_CLEANUP_DRURATION,
 } from '../utils/config';
 import {OtpSchema, UsedTokenSchema} from '../models/user';
-import {finishContest} from '../utils/finalizePlay';
+import {checkAndFinalizeContest} from '../utils/contestService';
 import {handleNotification} from '../utils/notiService';
 
 export default fp(async (fastify, opts) => {
@@ -24,18 +21,7 @@ export default fp(async (fastify, opts) => {
   // finish all contests
   const taskHandler = async () => {
     fastify.log.info('scheduler taskHandler called...');
-    const collContest = fastify.mongo.db?.collection<ContestSchema>(COLL_CONTESTS);
-    // fetch contests that are ACTIVE and endTime is already over
-    const filter: Filter<ContestSchema> = {
-      status: CONTEST_STATUS.ACTIVE,
-      endTime: {$lte: fastify.getCurrentTimestamp()},
-    };
-    // fetched in updateTs ascending order so that oldest contest updated first
-    const sort: Sort = {updatedTs: 1};
-    let contests = await collContest?.find(filter).sort(sort).limit(BATCH_FETCH_LIMIT).toArray();
-    contests = contests || [];
-    // finish contest for all eligible contests
-    await Promise.all(contests.map((c) => finishContest(c, fastify)));
+    await checkAndFinalizeContest(fastify);
   };
 
   // error handler function for the async task
