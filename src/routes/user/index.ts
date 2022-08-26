@@ -2,6 +2,7 @@ import {FastifyPluginAsync} from 'fastify';
 import {
   checkOtpHandler,
   createUserHandler,
+  getLeaderboardHandler,
   loginHandler,
   renewTokenHandler,
   updateFcmTokenHandler,
@@ -13,6 +14,7 @@ import {
   CheckOtpRequest,
   CreateUserOpts,
   CreateUserRequest,
+  GetLeaderboardOpts,
   LoginReqOpts,
   LoginRequest,
   RenewTokenReqOpts,
@@ -46,6 +48,9 @@ const userRoute: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
 
   // update FCM token for the user
   fastify.post<UpdateFCMTokenReq>('/updateFcmToken', UpdateFCMTokenReqOpts, updateFcmTokenHandler);
+
+  // get leaderboard data
+  fastify.get('/getLeaderboard', GetLeaderboardOpts, getLeaderboardHandler);
 };
 
 export default userRoute;

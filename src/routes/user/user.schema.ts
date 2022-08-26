@@ -258,3 +258,30 @@ export const UpdateFCMTokenReqOpts: RouteShorthandOptions = {
     },
   },
 };
+
+export const GetLeaderboardOpts: RouteShorthandOptions = {
+  schema: {
+    description: 'Leaderboard list API',
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: {type: 'boolean'},
+          data: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: {type: 'number'},
+                name: {type: 'string'},
+                totalPlayed: {type: 'number'},
+                contestWon: {type: 'number'},
+                totalEarning: {type: 'number'},
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+};

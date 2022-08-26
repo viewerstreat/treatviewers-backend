@@ -101,6 +101,7 @@ export const UNPROTECTED_ROUTES: RouteName[] = [
   {method: 'POST', url: '/api/v1/user/create'},
   {method: 'GET', url: '/api/v1/user/verify'},
   {method: 'GET', url: '/api/v1/user/checkOtp'},
+  {method: 'GET', url: '/api/v1/user/getLeaderboard'},
   {method: 'GET', url: '/api/v1/clip'},
   {method: 'GET', url: '/api/v1/contest'},
   {method: 'GET', url: '/api/v1/movie'},

@@ -437,3 +437,19 @@ export const updateFcmTokenHandler = async (request: UpdtFCMFstReq, reply: Fasti
   );
   return {success: true, message: 'token saved successfully'};
 };
+
+// get the leaderboard list
+export const getLeaderboardHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+  const collUser = request.mongo.db?.collection<UserSchema>(COLL_USERS);
+  const result = await collUser
+    ?.find({isActive: true, totalPlayed: {$gt: 0}})
+    .sort({
+      totalEarning: -1,
+      contestWon: -1,
+      totalPlayed: -1,
+      id: 1,
+    })
+    .limit(10)
+    .toArray();
+  return {success: true, data: result};
+};

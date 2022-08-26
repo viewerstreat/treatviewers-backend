@@ -21,7 +21,11 @@ export default fp(async (fastify, opts) => {
   // finish all contests
   const taskHandler = async () => {
     fastify.log.info('scheduler taskHandler called...');
-    await checkAndFinalizeContest(fastify);
+    try {
+      await checkAndFinalizeContest(fastify);
+    } catch (err) {
+      fastify.log.error(err);
+    }
   };
 
   // error handler function for the async task
@@ -35,11 +39,15 @@ export default fp(async (fastify, opts) => {
   // finish all contests
   const cleanUpTaskHandler = async () => {
     fastify.log.info('cleanup taskHandler called...');
-    const collOtp = fastify.mongo.db?.collection<OtpSchema>(COLL_OTPS);
-    const collToken = fastify.mongo.db?.collection<UsedTokenSchema>(COLL_USED_TOKENS);
-    const cutOff = fastify.getCurrentTimestamp() - TOKEN_CLEANUP_DRURATION * 24 * 3600 * 1000;
-    await collOtp?.deleteMany({validTill: {$lt: cutOff}});
-    await collToken?.deleteMany({updateTs: {$lt: cutOff}});
+    try {
+      const collOtp = fastify.mongo.db?.collection<OtpSchema>(COLL_OTPS);
+      const collToken = fastify.mongo.db?.collection<UsedTokenSchema>(COLL_USED_TOKENS);
+      const cutOff = fastify.getCurrentTimestamp() - TOKEN_CLEANUP_DRURATION * 24 * 3600 * 1000;
+      await collOtp?.deleteMany({validTill: {$lt: cutOff}});
+      await collToken?.deleteMany({updateTs: {$lt: cutOff}});
+    } catch (err) {
+      fastify.log.error(err);
+    }
   };
 
   // error handler function for the async task
@@ -51,7 +59,11 @@ export default fp(async (fastify, opts) => {
   // handler function for notification job
   const notificationTaskHandler = async () => {
     fastify.log.info('notification taskHandler called...');
-    handleNotification(fastify);
+    try {
+      await handleNotification(fastify);
+    } catch (err) {
+      fastify.log.error(err);
+    }
   };
 
   const task = new AsyncTask(CONTEST_TASK_ID, taskHandler, errorHandler);
