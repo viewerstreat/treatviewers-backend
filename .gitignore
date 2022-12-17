@@ -133,6 +133,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 public/
-firebase-service-account.json
 samplePayload.json
 tokenTest.js
